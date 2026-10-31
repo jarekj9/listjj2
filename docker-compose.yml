@@ -1,0 +1,68 @@
+name: listjj2
+
+# Deployment file. On the home server this directory (/home/debian/skrypty/docker/listjj2)
+# contains this file and .env. SQLite lives in the persistent Docker volume listjj2-data.
+# Images are pulled from GHCR (built by GitHub Actions).
+# Local build from sources: docker compose up -d --build
+
+services:
+  backend:
+    image: ghcr.io/jarekj9/listjj2-backend:latest
+    build: ./backend
+    container_name: listjj2_backend
+    hostname: listjj2_backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-sqlite:////data/listjj.db}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      JWT_EXPIRY_DAYS: ${JWT_EXPIRY_DAYS:-30}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_BOOTSTRAP_TOKEN: ${ADMIN_BOOTSTRAP_TOKEN:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      MICROSOFT_CLIENT_ID: ${MICROSOFT_CLIENT_ID:-}
+      MICROSOFT_TENANT_ID: ${MICROSOFT_TENANT_ID:-common}
+      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-20}
+      APP_VERSION: ${APP_VERSION:-0.1.0}
+      DEPLOYMENT_NAME: ${DEPLOYMENT_NAME:-home}
+    volumes:
+      - listjj-data:/data
+    expose:
+      - "8000"
+    security_opt:
+      - no-new-privileges:true
+
+  frontend:
+    image: ghcr.io/jarekj9/listjj2-frontend:latest
+    build: ./frontend
+    container_name: listjj2_frontend
+    hostname: listjj2_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      MICROSOFT_CLIENT_ID: ${MICROSOFT_CLIENT_ID:-}
+      MICROSOFT_TENANT_ID: ${MICROSOFT_TENANT_ID:-common}
+      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-20}
+    ports:
+      - "${FRONTEND_PORT:-8092}:80"
+    security_opt:
+      - no-new-privileges:true
+
+  # Optional PostgreSQL: docker compose --profile postgres up -d
+  # then set DATABASE_URL=postgresql+psycopg://listjj:<POSTGRES_PASSWORD>@db:5432/listjj
+  db:
+    image: postgres:16-alpine
+    profiles: ["postgres"]
+    container_name: listjj2_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: listjj
+      POSTGRES_USER: listjj
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
+    volumes:
+      - ./volumes/postgres:/var/lib/postgresql/data
+
+volumes:
+  listjj-data:
+    name: listjj2-data

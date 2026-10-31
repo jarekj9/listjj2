@@ -1,0 +1,22 @@
+# secrets and local data
+.env
+data/
+volumes/
+*.db
+
+# python
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.venv/
+
+# node
+node_modules/
+frontend/dist/
+
+# editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
