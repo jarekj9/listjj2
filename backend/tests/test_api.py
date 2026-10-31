@@ -146,8 +146,8 @@ def test_category_and_item_flow(client, user):
 
     invalid_value = client.post(
         "/api/items",
-        json={"name": "not finite", "value": float("inf"), "categoryId": cat["id"]},
-        headers=user,
+        content=f'{{"name":"not finite","value":1e309,"categoryId":"{cat["id"]}"}}',
+        headers={**user, "Content-Type": "application/json"},
     )
     assert invalid_value.status_code == 422
     assert "finite" in invalid_value.text
@@ -282,8 +282,8 @@ def test_api_key_external_and_settings(client, user):
     assert r.status_code == 200, r.text
     non_finite = client.post(
         "/api/external/items",
-        json={"name": "invalid numeric", "categoryName": "watch", "value": float("inf")},
-        headers=api,
+        content='{"name":"invalid numeric","categoryName":"watch","value":1e309}',
+        headers={**api, "Content-Type": "application/json"},
     )
     assert non_finite.status_code == 422
     first = client.get("/api/external/categories/Watch/first-item", headers=api)
