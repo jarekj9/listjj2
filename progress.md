@@ -1,9 +1,9 @@
 # Progress
 
 **Start Time:** '31-10-2026 15:16'
-**Finish Time:** Not finished
-**Status:** In progress
-**Progress:** 60%
+**Finish Time:** '31-10-2026 17:07'
+**Status:** Complete
+**Progress:** 100%
 
 ## Tasks
 
@@ -17,15 +17,15 @@
 * [x] Fix third-review findings
 * [x] Run final tests and builds
 * [x] Obtain final reviewer approval
-* [ ] Commit and push to GitHub
-* [ ] Wait for successful image publication
-* [ ] Deploy to the requested home-server directory
-* [ ] Smoke-test the deployed app
+* [x] Commit and push to GitHub
+* [x] Wait for successful image publication
+* [x] Deploy SQLite version to the requested home-server directory
+* [x] Smoke-test the deployed app
 
 ## Current phase
 
-Publish and deploy
+Complete
 
 ## Notes
 
-Final reviewer reports “No actionable issues found.” Checks pass: backend tests 16, frontend build, npm audit (0 findings), compose YAML and nginx shell syntax. Server Docker is available, but the requested deployment directory and `.env` do not exist; deployment will create only that directory. GitHub CLI is not installed, so workflow status needs another method.
+Final reviewer reported “No actionable issues found.” Backend tests (16), frontend build, npm audit (0 findings), Compose YAML, and Nginx script checks pass. Commits `18c73f3` and `47dac6c` pushed; GitHub Actions run `41216340183` passed and published both images. SQLite deployed in Docker volume `listjj2-data`; health and frontend smoke tests returned HTTP 200. Host port is 8093 because 8092 was occupied.

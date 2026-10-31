@@ -58,7 +58,8 @@ docker compose pull
 docker compose up -d
 ```
 
-The app is available on `http://192.168.0.26:8092`. SQLite data persists in the Docker volume `listjj2-data`.
+Open `http://<server>:<FRONTEND_PORT>` (default port `8092`). On this server `.env` uses port `8093`
+because `8092` was already occupied. SQLite persists in the Docker volume `listjj2-data`.
 If the GHCR packages are private, run `docker login ghcr.io` on the server first.
 
 PostgreSQL instead of SQLite:
