@@ -42,3 +42,47 @@ This document records execution order and acceptance checks.
 - Uploads are read in capped chunks; both attachments and CSV imports use `MAX_UPLOAD_MB`.
 - Initial admin registration requires a constant-time checked bootstrap token; normal registrations
   remain pending. Store the bootstrap token as a secret in `.env`.
+
+## Frontend redesign task
+
+### Design direction
+
+- Make Listjj feel like an editorial personal-workspace product, not a generic dashboard: warm mineral
+  canvas, deep pine navigation, restrained citrus accent, display serif for page titles, readable sans
+  for controls, and compact mono labels only for metadata.
+- Use a fixed desktop workspace rail, a mobile slide-over navigation, consistent spacing, clear page
+  hierarchy, keyboard-visible focus, and reduced-motion-aware transitions.
+- Use Tailwind CSS v4 and local shadcn/ui primitives for buttons, fields, select, badges, alerts,
+  skeletons and structural components; use named `lucide-react` icons. Do not add animation packages;
+  simple CSS transitions are sufficient.
+
+### Routes and behavior to preserve
+
+- `/login` and `/register`: preserve password, Google and Microsoft auth, pending-account messaging,
+  and first-admin bootstrap; provide clear validation/busy/error/success states.
+- `/items`: retain category, text, modified-date, tag ordering, active toggles, CRUD, files, CSV, and
+  recent-category behavior. Use a compact, scannable row/list treatment with useful empty/loading states.
+- `/categories`: retain create/edit/delete and explain destructive deletion before confirmation.
+- `/users`: retain admin create/edit/delete/approval, with responsive table-to-row layout and status.
+- `/settings`: retain API key generate/custom/copy, MCP and external API details, docs link and admin
+  server information.
+- Pending approval and unknown routes must remain legible, actionable and responsive.
+
+### Acceptance checks
+
+- Keep all routes and API interactions intact; no visual redesign may remove a capability.
+- At 375px, tablet and desktop widths, no horizontal viewport overflow; mobile navigation is operable
+  by keyboard and exposes appropriate labels/states.
+- At 320px width and 667×375 / 1280×500 heights, long tags do not overflow and every navigation item
+  remains reachable by scrolling.
+- Verify contrast of functional text and focus indicators, labeled collection combobox, route titles,
+  mobile auth heading, API failure retry states, and in-dialog destructive-action failures/pending state.
+- Add automated Playwright regression tests for route focus/scroll, long-data overflow, mobile sheet,
+  collection naming, CSV keyboard upload, roles retry and destructive-action pending/errors; CI runs
+  these before publishing images.
+- Production Vite build succeeds; backend pytest and Playwright tests pass; npm audit remains clear;
+  update root architecture and concise README
+  if setup or run instructions change.
+- After final review and CI image publication, sync the reviewed compose file, pin the full reviewed
+  SHA tag in the existing server `.env`, and deploy the frontend on port `8093`; verify it is healthy
+  and leave its persistent SQLite volume unchanged.

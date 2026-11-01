@@ -4,7 +4,7 @@ Personal notes and todo lists with categories, tags, ordering, files, CSV import
 a REST API, an MCP server for AI assistants, and a React web UI.
 
 - Backend: Python 3.12, FastAPI, SQLAlchemy (SQLite or PostgreSQL)
-- Frontend: React + Vite, served by nginx
+- Frontend: React + Vite + Tailwind/shadcn UI, served by nginx
 - Details: [specification.md](specification.md)
 
 ## Run locally
@@ -31,7 +31,7 @@ npm install
 npm run dev
 ```
 
-Tests: `cd backend; pytest`
+Tests: backend `cd backend; pytest`; frontend `cd frontend; npx playwright install chromium; npm run test:e2e`.
 
 ## Docker
 
@@ -46,20 +46,26 @@ regular accounts remain pending until approved from the Users page.
 
 ## Deploy to the home server
 
-Images are built by GitHub Actions (`.github/workflows/docker-publish.yml`) on every push to `master`
-and pushed to `ghcr.io/jarekj9/listjj2-backend` and `-frontend`.
+Images are built by GitHub Actions (`.github/workflows/docker-publish.yml`) on pushes to `master`;
+tests run before publication. Each image is published with a full commit-SHA tag.
 
-On the server (`/home/debian/skrypty/docker/listjj2`):
+For every deployment, first update the server's compose file from the reviewed checkout and set
+`IMAGE_TAG=sha-<reviewed-full-commit-sha>` in its existing `.env` (preserve all secrets and
+`FRONTEND_PORT=8093`):
 
 ```bash
-# first time: copy docker-compose.yml and create .env (from .env.example);
-# replace JWT_SECRET and ADMIN_BOOTSTRAP_TOKEN with unique secrets.
-docker compose pull
-docker compose up -d
+# from the repository root; on first deployment also create .env from .env.example
+scp docker-compose.yml debian@<server>:/home/debian/skrypty/docker/listjj2/docker-compose.yml
+# on the server, edit only IMAGE_TAG in .env, then run:
+docker compose pull frontend
+docker compose up -d --no-deps frontend
 ```
 
-Open `http://<server>:<FRONTEND_PORT>` (default port `8092`). On this server `.env` uses port `8093`
-because `8092` was already occupied. SQLite persists in the Docker volume `listjj2-data`.
+For the first deployment only, create `.env` from `.env.example` and replace the JWT/bootstrap
+placeholders with unique secrets; never overwrite an existing server `.env`.
+
+Open `http://<server>:<FRONTEND_PORT>` (local default `8092`; home server `8093`). SQLite persists in
+the Docker volume `listjj2-data`; never use `docker compose down -v`.
 If the GHCR packages are private, run `docker login ghcr.io` on the server first.
 
 PostgreSQL instead of SQLite:
@@ -78,7 +84,8 @@ Most important: `JWT_SECRET`, `ADMIN_EMAIL`, `ADMIN_BOOTSTRAP_TOKEN`, `DATABASE_
 
 - REST: `Authorization: Bearer <JWT>` (login via `/api/auth/login`), or `Bearer <API key>` for `/api/external/*`.
   The API key is shown on the Settings page.
-- MCP: `http://<host>:8092/mcp` with header `Authorization: Bearer <API key>`.
+- MCP: `http://<host>:<FRONTEND_PORT>/mcp` with header `Authorization: Bearer <API key>`; use `8093`
+  for the home server.
 - Existing clients can continue using `/api/Listjj/GetAllListjj`, `AddItem`, `DelItem` and
   `GetByCategoryName`; the watch endpoint still accepts its API key in the `key` query parameter.
   Prefer bearer headers for new clients because query-string keys can be logged.
@@ -86,4 +93,5 @@ Most important: `JWT_SECRET`, `ADMIN_EMAIL`, `ADMIN_BOOTSTRAP_TOKEN`, `DATABASE_
 ## Social login (optional)
 
 - Google: set `GOOGLE_CLIENT_ID` (backend and frontend variables). Add the site origin to the OAuth client.
-- Microsoft: set `MICROSOFT_CLIENT_ID` and `MICROSOFT_TENANT_ID`. Register `http://<host>:8092/login` as a SPA redirect URI.
+- Microsoft: set `MICROSOFT_CLIENT_ID` and `MICROSOFT_TENANT_ID`. Register
+  `http://<host>:<FRONTEND_PORT>/login` as a SPA redirect URI; use `8093` for the home server.

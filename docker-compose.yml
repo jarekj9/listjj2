@@ -7,7 +7,7 @@ name: listjj2
 
 services:
   backend:
-    image: ghcr.io/jarekj9/listjj2-backend:latest
+    image: ghcr.io/jarekj9/listjj2-backend:${IMAGE_TAG:-local}
     build: ./backend
     container_name: listjj2_backend
     hostname: listjj2_backend
@@ -32,7 +32,7 @@ services:
       - no-new-privileges:true
 
   frontend:
-    image: ghcr.io/jarekj9/listjj2-frontend:latest
+    image: ghcr.io/jarekj9/listjj2-frontend:${IMAGE_TAG:-local}
     build: ./frontend
     container_name: listjj2_frontend
     hostname: listjj2_frontend

@@ -7,7 +7,7 @@ front (`listjj_front`). Backend and frontend are separate deployable units.
 
 - Preserve old functionality (see section 3), modernised and simplified.
 - Backend: Python 3.12, FastAPI, SQLAlchemy 2.0 (SQLite default, PostgreSQL supported).
-- Frontend: React 18 + Vite, plain CSS, no UI framework.
+- Frontend: React 18 + Vite, Tailwind CSS v4, local shadcn/ui components, and Lucide icons.
 - Public API for scripts/devices (REST) and an MCP server for AI assistants.
 - Built as Docker images by GitHub Actions, deployed with docker compose on the home server.
 - Few dependencies. No HTTPS handling inside the app (reverse proxy / LAN only).
@@ -42,7 +42,7 @@ frontend/
   docker/45-nginx-config.sh renders body limit from MAX_UPLOAD_MB
   nginx.conf            serves SPA, proxies /api and /mcp to backend
   Dockerfile            node build -> nginx
-  src/                  App, pages, components, api client
+  src/                  App, pages, shared shadcn/ui primitives, API client
 ```
 
 ## 3. Functional scope (from the old app)
@@ -68,6 +68,23 @@ frontend/
 Dropped (experimental, unused): Azure Service Bus / event consumers, Azure App Configuration,
 Redis cache, OpenTelemetry, Blazor/Razor pages, Scalar UI (FastAPI `/api/docs` replaces it).
 Caches (recent category, tag selection) are replaced by DB columns / direct queries.
+
+## 3.1 Frontend design system
+
+- Visual direction: editorial personal-workspace UI with a warm mineral background, deep-pine
+  navigation, restrained citrus accent, expressive serif page headings, and readable sans-serif UI.
+- Desktop uses a persistent workspace rail; mobile uses an accessible slide-over menu. Content adapts
+  without horizontal overflow.
+- Use Tailwind utilities and locally owned shadcn/ui primitives; use `lucide-react` icons with
+  accessible labels. Avoid motion libraries; only small CSS transitions are needed.
+- Preserve functionality on `/login`, `/register`, `/items`, `/categories`, `/users`, and `/settings`,
+  including auth providers, admin approval, CRUD, attachments, CSV, external API and MCP instructions.
+- Every route should provide usable loading, empty, error, focus, and responsive states. Page titles
+  update per route, route changes move focus to the visible page heading, and auth pages retain a
+  visible `h1` on mobile.
+- Tag and dialog text must wrap or truncate accessibly. Navigation remains scrollable in landscape and
+  short-height viewports. Functional text meets WCAG AA contrast, and destructive actions surface
+  pending/error feedback inside their confirmation dialogs.
 
 ## 4. Data model
 
@@ -166,15 +183,23 @@ Frontend runtime variables (nginx container): `GOOGLE_CLIENT_ID`, `MICROSOFT_CLI
 
 ## 9. Build & deploy
 
-- GitHub Actions (`.github/workflows/docker-publish.yml`) on push to `master`: builds `backend/` and `frontend/` images and pushes
-  `ghcr.io/jarekj9/listjj2-backend` and `ghcr.io/jarekj9/listjj2-frontend` (tags `latest` and commit sha).
+- GitHub Actions (`.github/workflows/docker-publish.yml`) on push to `master`: runs backend pytest,
+  frontend Playwright tests and the frontend production build before publishing `backend/` and
+  `frontend/` to GHCR. Images carry `latest` plus immutable full-SHA tags.
 - Home server: `/home/debian/skrypty/docker/listjj2` contains `docker-compose.yml` and `.env`.
   SQLite uses the named Docker volume `listjj2-data`; PostgreSQL data uses `./volumes/postgres`.
-  `docker compose pull && docker compose up -d`. Frontend (nginx) is exposed on local port `8092`; it proxies `/api` and `/mcp` to the backend.
+  For each deployment, sync the reviewed `docker-compose.yml`, set
+  `IMAGE_TAG=sha-<full-reviewed-commit-sha>` in the existing `.env` without overwriting secrets, then
+  pull/recreate only the frontend with
+  `docker compose pull frontend && docker compose up -d --no-deps frontend`. Never remove the named
+  volume. The home server exposes nginx on host port `8093`; local compose defaults to `8092`. nginx
+  proxies `/api` and `/mcp` to the backend.
 - Optional PostgreSQL: `docker compose --profile postgres up -d` with `DATABASE_URL` pointing to the `db` service.
 
 ## 10. Testing
 
 - `backend/tests/test_api.py`: pytest with FastAPI TestClient on a temporary SQLite database. Covers auth, approval, categories,
   items (ordering, move, search), files, CSV, external API, MCP initialize/tool call.
-- Frontend: `npm run build` must succeed.
+- Frontend: `npm run test:e2e` and `npm run build` must succeed; Playwright tests cover route titles/focus,
+  320px long-data overflow, mobile navigation, accessible CSV/collection controls, role retry and
+  destructive-action pending/errors.

@@ -31,6 +31,12 @@ jobs:
       - name: Install frontend dependencies
         working-directory: frontend
         run: npm ci
+      - name: Install Playwright Chromium
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+      - name: Run frontend end-to-end tests
+        working-directory: frontend
+        run: npm run test:e2e
       - name: Build frontend
         working-directory: frontend
         run: npm run build
@@ -59,7 +65,7 @@ jobs:
           images: ghcr.io/jarekj9/listjj2-${{ matrix.component }}
           tags: |
             type=raw,value=latest
-            type=sha
+            type=sha,format=long
 
       - uses: docker/build-push-action@v6
         with:
