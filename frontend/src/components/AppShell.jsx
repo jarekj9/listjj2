@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import {
   ArrowUpRight,
   BookOpenText,
@@ -7,6 +7,7 @@ import {
   FolderKanban,
   LogOut,
   Menu,
+  Search,
   Settings2,
   ShieldCheck,
   UsersRound,
@@ -21,6 +22,14 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "./ui/sheet.jsx";
+
+const NotebookFilterContext = createContext(null);
+
+export function useNotebookFilters() {
+  const context = useContext(NotebookFilterContext);
+  if (!context) throw new Error("useNotebookFilters must be used within AppShell.");
+  return context;
+}
 
 const links = [
   { to: "/items", label: "Notebook", detail: "Notes & tasks", icon: BookOpenText },
@@ -119,9 +128,40 @@ function WorkspaceNav({ user, onNavigate }) {
 export default function AppShell({ children }) {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
-  const pathname = window.location.pathname;
-  const currentLink = [...links, ...(user?.role === "Admin" ? [{ to: "/users", label: "People" }] : []), { to: "/settings", label: "Settings" }]
-    .find((link) => pathname.startsWith(link.to));
+  const [filtersOpen, setFiltersOpen] = useState(() => window.matchMedia("(min-width: 640px)").matches);
+  const focusSearchOnOpen = useRef(false);
+  const location = useLocation();
+  const pathname = location.pathname;
+  const currentLink = [
+    ...links,
+    ...(user?.role === "Admin" ? [{ to: "/users", label: "People", mobileLabel: "People" }] : []),
+    { to: "/settings", label: "Settings", mobileLabel: "Settings" },
+  ].find((link) => pathname.startsWith(link.to));
+  const notebookRoute = pathname === "/items" || pathname.startsWith("/items/");
+
+  useEffect(() => {
+    const media = window.matchMedia("(min-width: 640px)");
+    const syncBreakpoint = () => setFiltersOpen(media.matches);
+    media.addEventListener("change", syncBreakpoint);
+    return () => media.removeEventListener("change", syncBreakpoint);
+  }, []);
+
+  useEffect(() => {
+    setFiltersOpen(window.matchMedia("(min-width: 640px)").matches);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!filtersOpen || !focusSearchOnOpen.current) return;
+    focusSearchOnOpen.current = false;
+    const searchInput = document.getElementById("item-search");
+    searchInput?.focus({ preventScroll: true });
+    searchInput?.scrollIntoView({ block: "nearest" });
+  }, [filtersOpen]);
+
+  const openFilters = () => {
+    focusSearchOnOpen.current = true;
+    setFiltersOpen(true);
+  };
 
   return (
     <div className="app-shell min-h-screen bg-background">
@@ -130,11 +170,11 @@ export default function AppShell({ children }) {
       </aside>
 
       <div className="min-h-screen lg:pl-[258px]">
-        <header className="sticky top-0 z-20 flex h-[74px] items-center justify-between border-b border-[#e2e5dc] bg-[#f5f5ef]/95 px-4 backdrop-blur-md sm:px-7 lg:px-10">
-          <div className="flex min-w-0 items-center gap-3">
+        <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-[#e2e5dc] bg-[#f5f5ef]/95 px-2 backdrop-blur-md sm:h-[74px] sm:px-7 lg:px-10">
+          <div className="flex min-w-0 flex-1 items-center gap-2 sm:flex-initial sm:gap-3">
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
-                <Button variant="outline" size="icon" className="size-10 rounded-xl border-[#dfe4da] bg-white lg:hidden" aria-label="Open navigation">
+                <Button variant="outline" size="icon" className="size-11 shrink-0 rounded-xl border-[#dfe4da] bg-white sm:size-10 lg:hidden" aria-label="Open navigation">
                   <Menu size={18} aria-hidden="true" />
                 </Button>
               </SheetTrigger>
@@ -144,25 +184,29 @@ export default function AppShell({ children }) {
                 <WorkspaceNav user={user} onNavigate={() => setOpen(false)} />
               </SheetContent>
             </Sheet>
-            <div className="min-w-0">
+            <div className="hidden min-w-0 sm:block">
               <p className="m-0 truncate font-mono text-[9px] uppercase tracking-[0.2em] text-[#58675d]">A personal index <span className="px-1.5 text-[#58675d]">/</span> {currentLink?.label || "Workspace"}</p>
               <p className="m-0 mt-1 truncate text-[12px] text-[#56655b]">Keep the useful things close.</p>
             </div>
+            <span className="min-w-0 flex-1 truncate font-serif text-[17px] font-medium tracking-tight text-[#20382d] sm:hidden">{currentLink?.mobileLabel || currentLink?.label || "Workspace"}</span>
           </div>
-          <div className="ml-3 flex shrink-0 items-center gap-2 sm:gap-3">
+          <div className="ml-1 flex shrink-0 items-center gap-0.5 sm:ml-3 sm:gap-3">
             <span className="hidden items-center gap-2 rounded-full border border-[#dce3d7] bg-white/70 px-3 py-1.5 text-[10px] text-[#637267] sm:inline-flex">
               <span className="size-1.5 rounded-full bg-[#789b6b]" />
               Private workspace
             </span>
-            <Button variant="ghost" size="sm" aria-label="Sign out" onClick={logout} className="gap-2 rounded-xl px-2 text-[#526258] hover:bg-white sm:px-3">
+            {notebookRoute && <Button type="button" variant="ghost" size="icon" aria-label="Find notes" aria-expanded={filtersOpen} aria-controls="notebook-filters" onClick={() => filtersOpen ? setFiltersOpen(false) : openFilters()} className="size-11 rounded-xl text-[#526258] hover:bg-white sm:hidden"><Search size={18} aria-hidden="true" /></Button>}
+            <Button variant="ghost" size="sm" aria-label="Sign out" onClick={logout} className="size-11 rounded-xl px-0 text-[#526258] hover:bg-white sm:size-auto sm:gap-2 sm:px-3">
               <LogOut size={16} aria-hidden="true" />
               <span className="hidden sm:inline">Sign out</span>
             </Button>
           </div>
         </header>
 
-        <main className="workspace-main px-4 pb-12 pt-7 sm:px-7 sm:pt-9 lg:px-10 lg:pt-11">
-          <div className="page-enter">{children}</div>
+        <main className="workspace-main px-4 pb-12 pt-4 sm:px-7 sm:pt-9 lg:px-10 lg:pt-11">
+          <NotebookFilterContext.Provider value={{ filtersOpen, setFiltersOpen, openFilters }}>
+            <div className="page-enter">{children}</div>
+          </NotebookFilterContext.Provider>
           <footer className="mt-16 flex flex-wrap items-center justify-between gap-2 border-t border-[#e1e4dc] pt-4 text-[10px] text-[#58675d]">
             <span>Listjj <span className="px-1.5">·</span> your thoughts, in good order</span>
             <a href="/api/docs" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 transition-colors hover:text-[#244b3d]">

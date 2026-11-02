@@ -1,11 +1,39 @@
 # Progress
 
+**Start Time:** 02-11-2026 17:09
+**Finish Time:** Not finished
+**Status:** In progress
+**Progress:** 75%
+
+## Tasks
+
+* [x] Analyze requirements and create the implementation specification
+* [x] Run baseline build and frontend tests
+* [x] Implement mobile layout and new-note form improvements
+* [x] Update architecture, implementation and progress documentation
+* [x] Run automated and responsive validation
+* [x] Resolve review findings and obtain a clean independent review
+* [ ] Publish and deploy the reviewed frontend image
+* [ ] Smoke-test deployment and complete final review
+
+## Current Phase
+
+Deployment
+
+## Notes
+
+Specification: `plan/mobile-ui-refinements.md`. All first/second-review findings are resolved. The generic reviewer returned “No actionable issues found.” The focused eyebrow test passed; the full 12-test suite, Vite build, npm audit (0 vulnerabilities), and 16 backend tests passed. Backend output includes existing Pydantic alias warnings. Deployment is underway; preserve the server `.env`, backend and SQLite volume.
+
+## Previous task history
+
+### Previous task (complete)
+
 **Start Time:** '31-10-2026 20:23'
-**Finish Time:** '01-11-2026 10:44'
+**Finish Time:** '01-11-2026 10:49'
 **Status:** Complete
 **Progress:** 100%
 
-## Tasks
+#### Tasks
 
 * [x] Analyze requirements and create the implementation specification
 * [x] Implement the responsive redesign and first review fixes
@@ -17,10 +45,6 @@
 * [x] Obtain a clean final review
 * [x] Publish and deploy to the home server; smoke-test without touching SQLite data
 
-## Current phase
+#### Notes
 
-Complete
-
-## Notes
-
-Final reviewer returned “No actionable issues found.” Commit `9c23a239746557b8a97485edf44eb2517077e3cf` passed GitHub Actions run `41293162577`; eight Playwright tests, frontend build/audit (0 vulnerabilities), and 16 backend tests pass. Deployed the SHA-pinned frontend to `192.168.0.26:8093`; login, items and API docs return HTTP 200, the browser console has no errors, backend was not restarted, and `listjj2-data` remains present.
+Final reviewer returned “No actionable issues found.” Deployment commit `c068d976175ca6eb3df835d6b027dc2a4a4be0fd` passed GitHub Actions run `41294574554`. Eight Playwright tests, frontend build/audit (0 vulnerabilities), and 16 backend tests passed. The home-server compose file was synced and the SHA-pinned frontend was running at `192.168.0.26:8093`; login, items and API docs returned HTTP 200, the browser console had no errors, the backend was not restarted, and `listjj2-data` remained present.

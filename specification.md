@@ -75,6 +75,12 @@ Caches (recent category, tag selection) are replaced by DB columns / direct quer
   navigation, restrained citrus accent, expressive serif page headings, and readable sans-serif UI.
 - Desktop uses a persistent workspace rail; mobile uses an accessible slide-over menu. Content adapts
   without horizontal overflow.
+- Below 640px, the sticky app bar is a compact row with navigation, current page title, a Notebook-only
+  Find toggle, and sign out. The Notebook page starts with its search/filter controls collapsed; both
+  Find controls share state, and filters are expanded at 640px and wider. The mobile Notebook header
+  hides its decorative hero copy while retaining a focusable page title, and presents compact stats
+  beside the New note action. On create forms, Cancel and Add to notebook stay in the form header.
+  Desktop page-header, stats, and filter layouts remain expanded and unchanged.
 - Use Tailwind utilities and locally owned shadcn/ui primitives; use `lucide-react` icons with
   accessible labels. Avoid motion libraries; only small CSS transitions are needed.
 - Preserve functionality on `/login`, `/register`, `/items`, `/categories`, `/users`, and `/settings`,
@@ -202,4 +208,6 @@ Frontend runtime variables (nginx container): `GOOGLE_CLIENT_ID`, `MICROSOFT_CLI
   items (ordering, move, search), files, CSV, external API, MCP initialize/tool call.
 - Frontend: `npm run test:e2e` and `npm run build` must succeed; Playwright tests cover route titles/focus,
   320px long-data overflow, mobile navigation, accessible CSV/collection controls, role retry and
-  destructive-action pending/errors.
+  destructive-action pending/errors. Mobile UI regression coverage also checks the compact phone
+  topbar, default-collapsed filters and shared Find controls, 639/640px behavior, stats/New note
+  alignment and overflow, and create-form actions in the header.

@@ -86,3 +86,16 @@ This document records execution order and acceptance checks.
 - After final review and CI image publication, sync the reviewed compose file, pin the full reviewed
   SHA tag in the existing server `.env`, and deploy the frontend on port `8093`; verify it is healthy
   and leave its persistent SQLite volume unchanged.
+
+## Mobile UI refinements (2026-11)
+
+- On phones below 640px, keep the app bar to navigation, current page title, Notebook Find toggle,
+  and sign out. Collapse the Notebook filter panel by default; the topbar and in-page disclosure share
+  state, while layouts at 640px and wider stay expanded.
+- Hide the Notebook hero number, eyebrow, and description on phones while retaining its focusable h1.
+  Place compact stats alongside the New note action without narrow-screen overflow.
+- Put create-form Cancel and Add to notebook in the form header; preserve edit-form footer actions and
+  remove the decorative Plus from both form headers.
+- Acceptance: the Playwright suite covers phone topbar, filter open/close and focus, 639/640px
+  breakpoint, 320px overflow, stats/action alignment, and create-form header actions on mobile and
+  desktop. The detailed execution specification is [plan/mobile-ui-refinements.md](../plan/mobile-ui-refinements.md).

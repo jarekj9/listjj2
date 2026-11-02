@@ -1,5 +1,5 @@
 import { useId, useState } from "react";
-import { Check, Plus } from "lucide-react";
+import { Check } from "lucide-react";
 import { Button } from "./ui/button.jsx";
 import { Checkbox } from "./ui/checkbox.jsx";
 import { Input } from "./ui/input.jsx";
@@ -57,13 +57,16 @@ export default function ItemForm({ item, categories, tags = [], defaultCategoryI
   };
 
   return (
-    <form className="grid gap-5" aria-busy={saving} onSubmit={submit}>
-      <div className="flex items-start justify-between gap-4 border-b border-[#e8e9e2] pb-4">
-        <div>
+    <form className="flex w-full min-w-0 flex-col gap-5" aria-busy={saving} onSubmit={submit}>
+      <div className="flex w-full min-w-0 flex-wrap items-center justify-between gap-3 border-b border-[#e8e9e2] pb-4">
+        <div className="min-w-0 flex-1">
           <p className="mb-1 font-mono text-[9px] uppercase tracking-[.18em] text-[#7c8b80]">{item ? "Refine a thought" : "A new page"}</p>
           <h3 className="font-display m-0 text-2xl font-medium text-[#244032]">{item ? "Edit note" : "Capture a thought"}</h3>
         </div>
-        <span className="grid size-9 place-items-center rounded-xl bg-[#e9eee2] text-[#4a6c51]"><Plus size={17} aria-hidden="true" /></span>
+        {!item && <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+          {onCancel && <Button type="button" variant="ghost" onClick={onCancel} className="h-10 rounded-xl px-2.5 text-xs text-[#657368] sm:px-3">Cancel</Button>}
+          <Button type="submit" disabled={saving} className="h-10 rounded-xl bg-[#244b3d] px-3 text-xs text-white hover:bg-[#1c3c30] sm:px-4">{saving ? "Adding…" : submitLabel}</Button>
+        </div>}
       </div>
 
       {error && <MessageBanner id={`item-error-${listId}`} title="Could not save" className="my-0">{error}</MessageBanner>}
@@ -109,10 +112,10 @@ export default function ItemForm({ item, categories, tags = [], defaultCategoryI
         </label>
       </div>
 
-      <div className="flex flex-col-reverse justify-end gap-2 border-t border-[#e8e9e2] pt-4 sm:flex-row">
+      {item && <div className="flex flex-col-reverse justify-end gap-2 border-t border-[#e8e9e2] pt-4 sm:flex-row">
         {onCancel && <Button type="button" variant="ghost" onClick={onCancel} className="rounded-xl text-[#657368]">Cancel</Button>}
-        <Button type="submit" disabled={saving} className="rounded-xl bg-[#244b3d] px-5 text-white hover:bg-[#1c3c30]">{saving ? (item ? "Saving…" : "Adding…") : submitLabel}</Button>
-      </div>
+        <Button type="submit" disabled={saving} className="rounded-xl bg-[#244b3d] px-5 text-white hover:bg-[#1c3c30]">{saving ? "Saving…" : submitLabel}</Button>
+      </div>}
     </form>
   );
 }

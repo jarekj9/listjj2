@@ -148,6 +148,7 @@ test("long user data stays inside the mobile viewport and select popup", async (
   await expect(badge).toHaveAttribute("title", longName);
   expect(await badge.evaluate((node) => node.getBoundingClientRect().width)).toBeLessThanOrEqual(200);
 
+  await page.getByRole("button", { name: "Find & filter" }).click();
   await page.getByRole("combobox", { name: "Collection" }).click();
   const popup = page.locator('[data-slot="select-content"]');
   await expect(popup).toBeVisible();
@@ -158,6 +159,127 @@ test("long user data stays inside the mobile viewport and select popup", async (
   }));
   expect(popupSize.width).toBeLessThanOrEqual(320);
   expect(popupSize.scrollWidth).toBeLessThanOrEqual(popupSize.clientWidth);
+});
+
+test("phone toolbar, collapsed filters and compact stats work together", async ({ page }) => {
+  await mockApi(page);
+  const consoleErrors = [];
+  page.on("console", (message) => { if (message.type() === "error") consoleErrors.push(message.text()); });
+  page.on("pageerror", (error) => consoleErrors.push(error.message));
+  await page.setViewportSize({ width: 375, height: 667 });
+  await page.goto("/items");
+
+  const toolbar = page.locator("header").first();
+  await expect(toolbar.getByRole("button", { name: "Open navigation" })).toBeVisible();
+  await expect(toolbar.getByText("Notebook", { exact: true })).toBeVisible();
+  const findToggle = toolbar.getByRole("button", { name: "Find notes" });
+  await expect(findToggle).toBeVisible();
+  await expect(toolbar.getByRole("button", { name: "Sign out" })).toBeVisible();
+  for (const button of [toolbar.getByRole("button", { name: "Open navigation" }), findToggle, toolbar.getByRole("button", { name: "Sign out" })]) {
+    const box = await button.boundingBox();
+    expect(box.width).toBeGreaterThanOrEqual(44);
+    expect(box.height).toBeGreaterThanOrEqual(44);
+  }
+  await expect(toolbar.getByText("Keep the useful things close.")).toBeHidden();
+  await expect(toolbar.getByText("A personal index")).toBeHidden();
+
+  const heading = page.getByRole("heading", { name: "The notebook." });
+  await expect(heading).toBeAttached();
+  await expect(heading).toHaveClass(/sr-only/);
+  await expect.poll(() => heading.evaluate((node) => node === document.activeElement)).toBe(true);
+  await expect(page.locator('section[aria-labelledby="notebook-title"] > header > div > p').first()).toBeHidden();
+  await expect(page.getByText("Notes, small plans and loose ends—kept together, without the noise.", { exact: true })).toBeHidden();
+
+  const filters = page.locator("#notebook-filters");
+  const disclosure = page.getByRole("button", { name: /Find & filter/ });
+  await expect(filters).toBeHidden();
+  await expect(disclosure).toHaveAttribute("aria-expanded", "false");
+  await expect(findToggle).toHaveAttribute("aria-expanded", "false");
+  await findToggle.click();
+  await expect(filters).toBeVisible();
+  await expect(page.getByRole("searchbox", { name: "Find something" })).toBeFocused();
+  await expect(findToggle).toHaveAttribute("aria-expanded", "true");
+  await disclosure.click();
+  await expect(filters).toBeHidden();
+  await expect(disclosure).toHaveAttribute("aria-expanded", "false");
+  await expect(disclosure).toBeFocused();
+  await disclosure.click();
+  await expect(page.getByRole("searchbox", { name: "Find something" })).toBeFocused();
+  await findToggle.click();
+  await expect(filters).toBeHidden();
+  await expect(findToggle).toBeFocused();
+
+  const statsGrid = page.getByTestId("mobile-stats-grid");
+  const newNote = page.getByRole("button", { name: "New note" });
+  const centers = await Promise.all([statsGrid, newNote].map((element) => element.evaluate((node) => {
+    const rect = node.getBoundingClientRect();
+    return rect.top + rect.height / 2;
+  })));
+  expect(Math.abs(centers[0] - centers[1])).toBeLessThanOrEqual(4);
+
+  await page.setViewportSize({ width: 320, height: 640 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+  const [narrowButton, narrowStats] = await Promise.all([newNote, statsGrid].map((element) => element.evaluate((node) => node.getBoundingClientRect().toJSON())));
+  expect(narrowButton.bottom).toBeLessThanOrEqual(narrowStats.top);
+  expect(narrowStats.width).toBeGreaterThanOrEqual(228);
+  expect(consoleErrors).toEqual([]);
+});
+
+test("filter disclosure is always expanded at 640px and up", async ({ page }) => {
+  await mockApi(page);
+  await page.setViewportSize({ width: 639, height: 720 });
+  await page.goto("/items");
+  await expect(page.locator("#notebook-filters")).toBeHidden();
+  await page.setViewportSize({ width: 640, height: 720 });
+  await expect(page.locator("#notebook-filters")).toBeVisible();
+  expect(await page.locator("#notebook-filters").getAttribute("hidden")).toBeNull();
+  await expect(page.getByRole("button", { name: "Find notes" })).toBeHidden();
+  await expect(page.locator("header.sticky").getByText(/A personal index.*Notebook/)).toBeVisible();
+  await expect(page.locator("header.sticky").getByText("Keep the useful things close.")).toBeVisible();
+  expect((await page.getByRole("button", { name: "Open navigation" }).boundingBox()).width).toBe(40);
+  await page.reload();
+  expect(await page.locator("#notebook-filters").getAttribute("hidden")).toBeNull();
+});
+
+test("phone topbar titles match other workspace routes and Find stays Notebook-only", async ({ page }) => {
+  await mockApi(page);
+  await page.setViewportSize({ width: 375, height: 667 });
+  for (const [path, title] of [["/categories", "Collections"], ["/users", "People"], ["/settings", "Settings"]]) {
+    await page.goto(path);
+    const toolbar = page.locator("header.sticky");
+    await expect(toolbar.getByText(title, { exact: true })).toBeVisible();
+    await expect(toolbar.getByRole("button", { name: "Find notes" })).toBeHidden();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
+  }
+
+  for (const [width, height] of [[320, 640], [375, 667], [667, 375], [768, 1024], [1280, 720]]) {
+    await page.setViewportSize({ width, height });
+    await page.goto("/items");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
+});
+
+test("new-note submit and cancel stay in the form header on phone and desktop", async ({ page }) => {
+  await mockApi(page);
+  for (const width of [320, 1280]) {
+    await page.setViewportSize({ width, height: 700 });
+    await page.goto("/items");
+    await page.getByRole("button", { name: "New note" }).click();
+    const form = page.locator("form");
+    const header = form.locator(":scope > div").first();
+    const submit = form.getByRole("button", { name: "Add to notebook" });
+    await expect(header.getByRole("heading", { name: "Capture a thought" })).toBeVisible();
+    await expect(header.getByRole("button", { name: "Cancel" })).toBeVisible();
+    await expect(submit).toBeVisible();
+    await expect(submit).toBeInViewport();
+    expect(await form.evaluate((node) => {
+      const submitButton = node.querySelector('button[type="submit"]');
+      const firstInput = node.querySelector("input");
+      return Boolean(submitButton.compareDocumentPosition(firstInput) & Node.DOCUMENT_POSITION_FOLLOWING);
+    })).toBe(true);
+    expect(await form.locator("svg.lucide-plus").count()).toBe(0);
+    await expect(form.locator(":scope > div").last()).not.toContainText("Add to notebook");
+  }
 });
 
 test("long API errors and pending-user email wrap at 320px", async ({ page }) => {
