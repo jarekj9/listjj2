@@ -1,6 +1,6 @@
 # Mobile UI refinements: implementation specification
 
-Status: implementation and local verification complete; review and deployment pending. Date: 2026-11-02.
+Status: complete. Date: 2026-11-02.
 Scope: frontend only, plus tests, docs and deployment.
 
 ## 1. Objective
@@ -224,7 +224,7 @@ Add:
 - [x] Other routes (`/categories`, `/users`, `/settings`, `/login`, `/register`) unaffected apart from the shared phone topbar.
 - [x] `npm run build`, `npm run test:e2e` (12 tests) and backend `pytest` pass. `npm audit` reports no vulnerabilities (0).
 - [x] `specification.md` and `progress.md` updated. `README.md` unchanged unless deploy steps changed.
-- [ ] Deployed: GHCR images tagged with the full SHA, server `IMAGE_TAG` updated, frontend recreated, smoke test passed, `listjj2-data` intact.
+- [x] Deployed: GHCR images tagged with the full SHA, server `IMAGE_TAG` updated, frontend recreated, smoke test passed, `listjj2-data` intact. Commit `435e472f0466e3e9c3f0a83a6a9cc2083bcbf819`, Actions run `41485059451` (success); frontend is healthy at `192.168.0.26:8093`.
 
 ## 14. Open questions and blockers
 
@@ -236,4 +236,4 @@ Assumptions A1-A7 apply unless the user says otherwise. Questions for the user:
 4. Cancel in the header (default) or kept at the bottom?
 5. Should Edit note also move Save to the top?
 6. New note: keep the text label on phone (default) or use an icon-only button?
-7. Authenticated smoke test on the server: will the user provide a test account? Without it, only unauthenticated checks run.
+7. Authenticated server smoke testing was not performed because no test account was provided. Unauthenticated checks passed for `/login`, `/items`, `/api/docs`, and `/api/health` (HTTP 200).
