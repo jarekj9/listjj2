@@ -1,19 +1,18 @@
 # Progress
 
-**Start Time:** 04-11-2026 19:14
+**Start Time:** 04-11-2026 20:23
 **Finish Time:** Not finished
 **Status:** In progress
-**Progress:** 78%
+**Progress:** 75%
 
 ## Tasks
 
-* [x] Analyze requirements and update the implementation specification
+* [x] Analyze the refined row requirements and add revision 3 specification
 * [x] Run baseline build and frontend tests
-* [x] Implement compact notebook top row and all-width Find/filter toggle
+* [x] Redesign the stats and New note row to be smaller and shorter
 * [x] Update architecture, implementation and progress documentation
-* [x] Run automated and responsive validation
-* [x] Fix findings from the first two review rounds
-* [x] Normalize the final reviewed deployment-tag placeholder and obtain a clean independent review
+* [x] Run responsive tests, build and visual validation
+* [x] Resolve review findings and obtain a clean independent review
 * [ ] Publish and deploy the reviewed frontend image
 * [ ] Smoke-test deployment and complete final review
 
@@ -23,9 +22,15 @@ Publish and deploy
 
 ## Notes
 
-Baseline passed: Vite production build and 12 Playwright tests. Current Vite build and all 15 Playwright tests pass, covering 320–1280px, open/closed filters, active state, errors/empty collections and the compact top row. Reviewer returned “No actionable issues found.” User explicitly requested deployment. Existing changes to `specification/implementation.md` and untracked `AGENTS.md` / `instruction.md` predate implementation; preserve unrelated content and do not include untracked files. Prior deployment history is retained below.
+Revision 2 is deployed to `192.168.0.26:8093` as `sha-3510adada812e6ec8d73842de9096cc9b665bee3`; endpoint smoke checks passed, backend and `listjj2-data` were untouched. Revision 3 passes the Vite production build and all 17 Playwright tests; final reviewer returned “No actionable issues found.” User requested deployment. Existing untracked `AGENTS.md` and `instruction.md` are unrelated; preserve and do not include them. Specification: `specification/implementation.md` revision 3.
 
 ## Previous task history
+
+### Previous task: Notebook top row and Find toggle (complete)
+
+**Commit:** `3510adada812e6ec8d73842de9096cc9b665bee3` · **Actions:** `41893631413` (success)
+
+Deployed frontend tag `sha-3510adada812e6ec8d73842de9096cc9b665bee3` at `192.168.0.26:8093`. `/login`, `/items`, `/api/docs`, `/api/health` returned HTTP 200; backend and `listjj2-data` were left unchanged. Authenticated UI smoke test was unavailable without a test account.
 
 ### Previous task (complete)
 

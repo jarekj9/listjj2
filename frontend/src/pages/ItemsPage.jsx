@@ -130,7 +130,7 @@ export default function ItemsPage() {
   const activeCount = items.filter((item) => item.active).length;
   const selectedCategoryName = categoryId ? categories.find((category) => category.id === categoryId)?.name || "Selected collection" : "All your notes";
   const filtersActive = Boolean(search || categoryId || dateFrom || dateTo);
-  const newNoteAction = categoryError ? null : categories.length ? <Button onClick={() => setAdding((value) => !value)} className="h-10 gap-1.5 rounded-xl bg-[#244b3d] px-3 text-white shadow-[0_6px_16px_-10px_rgba(23,58,44,.7)] hover:bg-[#1c3c30]"><Plus size={16} aria-hidden="true" />{adding ? "Close note" : "New note"}</Button> : <Button asChild className="h-10 rounded-xl bg-[#244b3d] px-3 text-white hover:bg-[#1c3c30]"><Link to="/categories">Create a collection</Link></Button>;
+  const newNoteAction = categoryError ? null : categories.length ? <Button onClick={() => setAdding((value) => !value)} className="h-10 w-auto gap-1 rounded-xl bg-[#244b3d] px-2 text-xs text-white shadow-[0_6px_16px_-10px_rgba(23,58,44,.7)] hover:bg-[#1c3c30] max-[360px]:w-full sm:h-9"><Plus size={14} className="size-3.5" aria-hidden="true" />{adding ? "Close note" : "New note"}</Button> : <Button asChild className="h-10 w-auto rounded-xl bg-[#244b3d] px-2 text-xs text-white hover:bg-[#1c3c30] max-[360px]:w-full sm:h-9"><Link to="/categories"><span className="sm:hidden">New collection</span><span className="hidden sm:inline">Create a collection</span></Link></Button>;
 
   useEffect(() => {
     setFiltersActive(filtersActive);
@@ -143,17 +143,17 @@ export default function ItemsPage() {
 
   return (
     <section aria-labelledby="notebook-title">
-      <header data-testid="notebook-top-row" className="mb-4 flex min-w-0 flex-wrap items-center justify-between gap-x-2 gap-y-3 sm:mb-5 sm:gap-x-4">
-        <h1 id="notebook-title" data-page-title tabIndex={-1} className="sr-only min-w-0 font-serif tracking-tight text-[#20382d] sm:not-sr-only sm:order-1 sm:text-[2.25rem] sm:leading-none">The notebook.</h1>
-        <div data-testid="notebook-stats" className="order-2 grid min-w-[216px] flex-1 grid-cols-3 min-[360px]:order-1 sm:order-2 sm:min-w-[300px] sm:flex-none">
-          <div className="min-w-0 pl-1 sm:pl-0"><p className="m-0 whitespace-nowrap font-mono text-[9px] uppercase tracking-[.08em] text-[#58675d] sm:tracking-[.13em]">In view</p><p className="mb-0 mt-0.5 font-serif text-xl leading-none text-[#294638]">{items.length}<span className="sr-only sm:not-sr-only sm:ml-1 sm:text-sm sm:text-[#58675d]"> notes</span></p></div>
-          <div className="min-w-0 border-l border-[#e4e7df] px-2 sm:px-3"><p className="m-0 whitespace-nowrap font-mono text-[9px] uppercase tracking-[.08em] text-[#58675d] sm:tracking-[.13em]">In progress</p><p className="mb-0 mt-0.5 font-serif text-xl leading-none text-[#294638]">{activeCount}<span className="sr-only sm:not-sr-only sm:ml-1 sm:text-sm sm:text-[#58675d]"> active</span></p></div>
-          <div className="min-w-0 border-l border-[#e4e7df] pl-2 sm:pl-3"><p className="m-0 whitespace-nowrap font-mono text-[9px] uppercase tracking-[.08em] text-[#58675d] sm:tracking-[.13em]">Collected in</p><p className="mb-0 mt-0.5 font-serif text-xl leading-none text-[#294638]">{categories.length}<span className="sr-only sm:not-sr-only sm:ml-1 sm:text-sm sm:text-[#58675d]"> lists</span></p></div>
+      <header data-testid="notebook-top-row" className="mb-3 flex min-w-0 flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-4">
+        <h1 id="notebook-title" data-page-title tabIndex={-1} className="sr-only min-w-0 font-serif leading-none tracking-tight text-[#20382d] sm:not-sr-only sm:shrink-0 sm:text-[1.75rem]">The notebook.</h1>
+        <div data-testid="notebook-stats" role="group" aria-label="Notebook statistics" className="flex flex-auto items-stretch sm:flex-none sm:shrink-0">
+          <div className="flex min-w-0 flex-auto items-baseline gap-0.5 whitespace-nowrap sm:flex-none"><span className="font-mono text-[8px] uppercase leading-none tracking-normal text-[#58675d] sm:text-[9px]">In view</span><span className="font-serif text-base leading-none text-[#294638]">{items.length}<span className="sr-only"> notes</span></span></div>
+          <div className="flex min-w-0 flex-auto items-baseline gap-0.5 whitespace-nowrap border-l border-[#e4e7df] px-0.5 sm:flex-none sm:px-2"><span className="font-mono text-[8px] uppercase leading-none tracking-normal text-[#58675d] sm:text-[9px]">In progress</span><span className="font-serif text-base leading-none text-[#294638]">{activeCount}<span className="sr-only"> active</span></span></div>
+          <div className="flex min-w-0 flex-auto items-baseline gap-0.5 whitespace-nowrap border-l border-[#e4e7df] pl-0.5 sm:flex-none sm:pl-2"><span className="font-mono text-[8px] uppercase leading-none tracking-normal text-[#58675d] sm:text-[9px]">Collected in</span><span className="font-serif text-base leading-none text-[#294638]">{categories.length}<span className="sr-only"> lists</span></span></div>
         </div>
-        {newNoteAction && <div className="order-1 ml-auto max-[359px]:order-1 min-[360px]:order-2 sm:order-3">{newNoteAction}</div>}
+        {newNoteAction && <div className="flex flex-auto justify-end max-[360px]:basis-full sm:ml-auto sm:flex-none">{newNoteAction}</div>}
       </header>
 
-      {categoryError && <MessageBanner className="mb-5 mt-0" title="Collections unavailable">{categoryError}<Button type="button" variant="outline" size="sm" onClick={loadCategories} className="ml-2 h-7 rounded-lg">Retry</Button></MessageBanner>}
+      {categoryError && <MessageBanner className="mb-3 mt-0" title="Collections unavailable">{categoryError}<Button type="button" variant="outline" size="sm" onClick={loadCategories} className="ml-2 h-7 rounded-lg">Retry</Button></MessageBanner>}
 
       <section ref={filterSection} id="notebook-filters" hidden={!filtersOpen} className="rounded-2xl border border-[#e0e4db] bg-[#fffefa] p-3 shadow-[0_10px_34px_-32px_rgba(31,54,40,.5)] sm:p-4" aria-label="Filter notebook">
         <div className="grid gap-3 xl:grid-cols-[minmax(180px,1.5fr)_minmax(150px,.9fr)_minmax(125px,.7fr)_minmax(125px,.7fr)_auto] xl:items-end">
@@ -209,7 +209,7 @@ export default function ItemsPage() {
       ) : categoryError ? null : categories.length === 0 && ready ? (
         <EmptyState icon={FileUp} eyebrow="Start with a collection" title="Give your thoughts a home." description="Create a collection first, then add notes, lists and plans to it." action="Create a collection" onAction={() => navigate("/categories")} />
       ) : loading && items.length === 0 ? (
-        <div className="mt-7 space-y-3" aria-label="Loading notes" role="status">{[0, 1, 2].map((row) => <div key={row} className="flex gap-4 border-b border-[#e6e8e0] py-5"><div className="size-[18px] animate-pulse rounded-md bg-[#e5e9e1]" /><div className="flex-1 space-y-3"><div className="h-4 w-2/5 animate-pulse rounded bg-[#e5e9e1]" /><div className="h-3 w-4/5 animate-pulse rounded bg-[#eceee8]" /></div></div>)}</div>
+        <div className="mt-3 space-y-3" aria-label="Loading notes" role="status">{[0, 1, 2].map((row) => <div key={row} className="flex gap-4 border-b border-[#e6e8e0] py-5"><div className="size-[18px] animate-pulse rounded-md bg-[#e5e9e1]" /><div className="flex-1 space-y-3"><div className="h-4 w-2/5 animate-pulse rounded bg-[#e5e9e1]" /><div className="h-3 w-4/5 animate-pulse rounded bg-[#eceee8]" /></div></div>)}</div>
       ) : items.length === 0 ? (
         <EmptyState
           icon={FileUp}
@@ -220,7 +220,7 @@ export default function ItemsPage() {
           onAction={search || dateFrom || dateTo ? resetFilters : () => setAdding(true)}
         />
       ) : (
-        <section className="mt-5" aria-label="Notes">
+        <section className="mt-3" aria-label="Notes">
           <div className="mb-1 flex items-center justify-between border-b border-[#dfe4da] pb-2.5">
             <h2 className="m-0 font-mono text-[9px] uppercase tracking-[.16em] text-[#58675d]">Recent notes</h2>
             <span className="text-[10px] text-[#58675d]">{items.length} {items.length === 1 ? "entry" : "entries"}</span>

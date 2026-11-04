@@ -106,7 +106,7 @@ This document records execution order and acceptance checks.
 
 ## Notebook top row and filter toggle (revision 2)
 
-Status: implemented and cleanly reviewed; deployment in progress. Date: 2026-11-04. Baseline: `HEAD` `0b8bfca` (after `435e472`).
+Status: implemented and cleanly reviewed; CI and image publication succeeded; deployed (served build verified 2026-11-04). Row sizing, wrapping, order and margins superseded by [revision 3](#notebook-row-layout-revision-3). Date: 2026-11-04. Baseline: `HEAD` `0b8bfca` (after `435e472`).
 Scope: frontend `/items` page, app bar, Playwright tests, docs and deployment (explicitly requested by the user). No backend, API, data or dependency change.
 
 Supersedes from `plan/mobile-ui-refinements.md`: A1-A5 where they conflict (phone-only filter collapse, hero and stats
@@ -319,3 +319,156 @@ Defaults below apply unless the user overrides them.
 2. Move Export and Import to the top row? Default: no (inside the panel).
 3. Add Escape to close the panel? Default: no.
 4. Confirm the magnifier and hidden panel at desktop widths (A2)? Default: yes.
+
+## Notebook row layout (revision 3)
+
+Status: implementation, build, 17 responsive Playwright tests and clean review complete; deployment in progress. Date: 2026-11-04. Baseline: deployed revision 2 (verified in the browser: `notebook-top-row` present, filter panel closed on load).
+Scope: frontend `/items` header, its Playwright tests, docs and the deployment explicitly requested by the user. No backend, API, data, dependency or `package.json` change. Supersedes revision 2 row sizing, stat-unit display, wrapping, order and margins only; revision 2 Find/filter behavior stays in force.
+
+### 1. Objective
+
+Make the Notebook top row (title, three stats, New note) compact: smaller stats, New note on the same line as the stats, and a one-line row (today 88-90px tall at 320-640px).
+
+### 2. Current state (measured on deployed revision 2)
+
+| Viewport | Row height | Measured problem |
+|---|---|---|
+| 320x640 | 88px | Stats on the left (288px wide), New note above them on the right. Two lines. |
+| 375x667 * | 88px | New note wraps under the stats, right-aligned. Two lines. |
+| 640x720 | 90px | New note alone on its own line. Title 36px. |
+| 768-1280 | 40px | One line, but stat values 20px, units 14px, title 36px. At 1280x720 the first block starts at 178px. |
+
+\* Current Playwright geometry at 375px provides 343px of header content width. The layout is also designed for 328px effective content width on classic-scrollbar browsers.
+
+Code facts (`frontend/src/pages/ItemsPage.jsx`):
+- L146 header `mb-4 sm:mb-5 ... sm:gap-x-4`; L147 h1 `sm:order-1 sm:text-[2.25rem]`.
+- L148 stats `order-2 grid min-w-[216px] flex-1 grid-cols-3 ... sm:min-w-[300px] sm:flex-none`; L149-151 values `text-xl`, units `sm:text-sm`, labels `sm:tracking-[.13em]`.
+- L153 New note wrapper `order-1 ml-auto ... min-[360px]:order-2 sm:order-3`; L133 button `h-10`.
+- L211 loading block `mt-7`; L223 Notes section `mt-5`; L156 banner `mb-5 mt-0`.
+- Margins collapse: visible gap = max(header `mb`, next block `mt`) = 20px today.
+- After tightening labels, separators and action padding, the stats/action group fits at the 328px content threshold with two-digit values; Playwright also covers a three-digit count at 375px. At 320px the action wraps to a full-width second line.
+
+### 3. Requirements
+
+**R1. Order and wrap.** Remove every `order-*` class from the h1, stats and New note wrapper. DOM order: h1, stats, New note. Header: `flex flex-wrap items-center gap-x-1 gap-y-2 sm:gap-x-4 mb-3`.
+
+**R2. Breakpoint and wrap.** At viewport widths 360px and above, stats and action stay on one line. Below 360px, stats stay first and the action is forced full-width onto a second line, regardless of the stats' intrinsic width/count.
+
+**R3. Title.** `sm:text-[1.75rem] leading-none` (was 2.25rem), `sm:shrink-0`. Visible from 640px, `sr-only` below. Keep `id`, `data-page-title`, `tabIndex={-1}`.
+
+**R4. Smaller stats.**
+- Values: `font-serif text-base leading-none` (16px, was `text-xl`).
+- Labels: 8px mono on phones and 9px from 640px, `whitespace-nowrap`, normal letter spacing to fit counts alongside the action.
+- Units ("notes", "active", "lists"): keep in the DOM for screen readers but `sr-only` at all widths. The visible labels already identify each count and removing repeated units saves horizontal space.
+- Cell padding at most 8px per side. Keep `border-l` dividers.
+- Container: `flex flex-auto items-stretch sm:flex-none sm:shrink-0`, replacing the grid, `min-w-[216px]` and `sm:min-w-[300px]`. Cells: `flex-auto sm:flex-none`.
+- Stats block height at most 32px.
+
+**R5. New note placement.**
+- Wrapper: `flex flex-auto justify-end sm:flex-none sm:ml-auto`.
+- Button (`newNoteAction`, L133): compact 12px text, explicit 14px icon, reduced horizontal padding, `h-10 w-auto max-[360px]:w-full sm:h-9` (40px phone, 36px from 640px; full-width only when the row wraps below 360px).
+- Action wrapper: `max-[360px]:basis-full` forces the second line below 360px even with zero/single-digit counts; it aligns to the right beside stats from 360px.
+- Vertically centred with the stats (`items-center`). Keep text "New note" / "Close note", icon, `aria-*` and toggle behaviour.
+- The "Create a collection" link uses the same wrapper; phones show "New collection" and this visible text provides its accessible name. At 640px+, the visible and accessible name is "Create a collection". No New note when collections fail (unchanged).
+
+**R6. Vertical space.** Header `mb-3` at every width. Change L211 `mt-7` to `mt-3`, L223 `mt-5` to `mt-3`, and L156 `mb-5` to `mb-3`. The gap becomes 12px.
+
+**R7. Unchanged.** `AppShell.jsx` (header height, `workspace-main` padding), magnifier and filter panel, `PageHeader.jsx`, `ItemForm.jsx`, `ItemCard.jsx`, empty and error states, colour tokens, focus rings.
+
+Targets (checked in Playwright, section 6):
+
+| Check | Target |
+|---|---|
+| Row height, 375-1280px (one line) | at most 40px; at most 36px from 640px |
+| Row height, 320px (wrapped) | at most 84px |
+| Header bottom to first block | at most 16px |
+| 1280x720, panel closed: first block top | at most 170px (was 178) |
+| New note vs stats vertical centre | within 2px at one-line widths; no overlap, including a three-digit total and no-collection CTA at 360/375px |
+| Stat value / label / unit | 16px / 8px phone + 9px desktop / sr-only |
+
+### 4. Files
+
+| File | Change |
+|---|---|
+| `frontend/src/pages/ItemsPage.jsx` | R1-R6: header, title, stats markup and classes, New note wrapper, `newNoteAction` classes, margins at L156, L211, L223. Keep `data-testid` values and handlers. |
+| `frontend/tests/redesign.spec.js` | Update and add checks (section 6). |
+| `specification.md` (root) | Implementation phase: section 3.1 (L78-83) one-line rule and 320px wrap order; section 10 (L209-213) new checks. |
+| `progress.md` | Implementation phase: new revision 3 block; close the revision 2 deployment item. |
+| `specification/implementation.md` | Done in planning (this section and revision 2 note). |
+| `AppShell.jsx`, `PageHeader.jsx`, `ItemForm.jsx`, `ItemCard.jsx`, `ui/*`, backend, `package.json`, `.github/`, `README.md` | No change expected. |
+
+### 5. Implementation approach (ordered)
+
+1. Baseline before editing: `npm run build` and `npm run test:e2e` both passed (15 tests) on deployed revision 2. Record this in `progress.md`.
+2. Edit `ItemsPage.jsx` per R1-R6.
+3. Update and add tests per section 6.
+4. Visual QA in Playwright at 320x640, 375x667, 640x720, 768x1024, 1024x768 and 1280x720, panel closed and open. Check the targets table, overflow, the collections-error and no-collections states. Save screenshots under `.playwright-mcp/` (gitignored).
+5. Update docs (section 4) in the same change.
+6. `npm run build` and `npm run test:e2e` pass with no console errors. Backend is unchanged.
+7. Commit and push only source, test and doc files. Never commit `.env`, `.playwright-mcp/`, `test-results/`, or the untracked `AGENTS.md` / `instruction.md`. Wait for `docker-publish.yml` to pass.
+8. Deploy (section 8).
+
+### 6. Tests (`frontend/tests/redesign.spec.js`)
+
+Update:
+- L238-242 (320px): flip to stats above New note (`narrowStats.bottom <= narrowButton.top`). New note width at least 250px. Stats width at least 228px.
+- L304-309 (top-row loop): at 320px stats are above the button. At every other width the centre difference is at most 2px and `stats.right <= button.left`. Remove the `width < 640 || width >= 768` condition.
+- L310-316 (1024, 1280): row height at most 40px (at most 36px at 1024 and 1280). Recent notes top at most 170px (was 220px).
+- Keep: L192 stat text, L193 no "01", L197 and L289 labels at 9px, L285 title `sr-only` below 640, L290-297 screen-reader-only unit words, L277-326 overflow, L344-349 error banner below the row and no New note on error.
+
+Add:
+- Typography: values 16px at every width; labels 8px at 360/375 and 9px at 640/1280; units remain screen-reader text; title 28px at 640 and 1280px.
+- Gap: header bottom to first block at most 16px at 375, 640 and 1280px.
+- Button height: 40px at 375px, 36px at 1280px.
+- Three-digit totals: exercise 100 active notes with New note at 360px (328px content width) and 375px.
+- No-collection state: use itemCount=100 at 360px and 375px, assert "New collection" is visible, the stats/action stay aligned, and no overflow.
+- Wrapped state at 320px and 359px: New note width at least 250px, stats above it, no overflow; test zero and normal counts to ensure wrapping is deterministic.
+
+### 7. Edge cases and risks
+
+- Row width: Playwright verifies the one-line layout at 360px (328px content) and 375px, with both three-digit totals and the no-collection action. Below 360px, it intentionally wraps. Guard against overlap/overflow.
+- Fonts load from Google Fonts (`frontend/index.html` L9-12). If fallback font metrics make the row wrap at 375px or wider in CI, tighten spacing (R4) rather than weakening the assertions. Report if this cannot be met.
+- Four-digit counts may exceed one-line width; allow wrapping without overlap or overflow.
+- No collections: show the compact "New collection" label on phones; its visible text is also its accessible name. Collections error: no New note; stats only.
+- Panel open or New note form open: header unchanged; the form stays below the row.
+
+### 8. Security considerations
+
+No new input, endpoint, storage or HTML. React escapes text. No change.
+
+### 9. Deployment (requested by the user in this conversation)
+
+After CI passes for the pushed commit:
+1. `ssh debian "cd /home/debian/skrypty/docker/listjj2 && ls -la"`. Confirm `docker-compose.yml` and `.env` exist. Sync the compose file only if it changed (it should not).
+2. Set only `IMAGE_TAG=sha-<full-commit-sha>` in the server `.env`. Do not print or overwrite other keys.
+3. `docker compose pull frontend && docker compose up -d --no-deps frontend`. Do not restart the backend. Do not remove `listjj2-data`.
+4. Smoke test HTTP 200 for `http://192.168.0.26:8093/login`, `/items`, `/api/docs` and `/api/health`. Run Playwright on `/items` at 375x667 and 1280x720 with mocked API routes (no real credentials are known). Check row height and that the console has no errors.
+5. Update `progress.md`: revision 2 deployment verified; revision 3 deployment result.
+
+### 10. Acceptance criteria
+
+1. `/items` at 360, 375, 640, 768, 1024 and 1280px shows the title (visible from 640px, `sr-only` below), three live stats and New note on one line. The 360px case also passes with 100 items and with no collections.
+2. At 320px the stats are full width above a full-width New note. Header at most 84px.
+3. Row height at most 40px at 375-1280px (at most 36px from 640px). Header-to-first-block gap at most 16px. At 1280x720 with the panel closed, first block top at most 170px.
+4. Stat values 16px; labels 8px on phones and 9px at 640px+; unit words remain screen-reader accessible without taking visual space. Stats block at most 32px high.
+5. New note and stats centred within 2px at one-line widths, with no horizontal overlap.
+6. Text, icon, toggle, `aria-*`, responsive "New collection" / "Create a collection" link names, and collections-error states remain functional.
+7. No `order-*` classes on the top row. `data-testid` values unchanged.
+8. No horizontal overflow at 320, 375, 667x375, 768, 1024 and 1280px, panel closed and open.
+9. Revision 2 behaviour unchanged: magnifier, panel hidden on load, route reset, active-filter dot, focus.
+10. `npm run build` and `npm run test:e2e` pass with no console errors. GitHub Actions `docker-publish.yml` is green.
+11. Root `specification.md` sections 3.1 and 10, `progress.md` and `specification/implementation.md` are updated in the same change. `README.md` is unchanged (no setup change).
+12. The `sha-<full-commit-sha>` frontend is served on `192.168.0.26:8093`, smoke checks pass, and `listjj2-data` is untouched.
+
+### 11. Assumptions and open questions
+
+| # | Topic | Default used |
+|---|---|---|
+| A1 | Measurements are from Windows Chromium with a 15px scrollbar. CI widths may differ slightly because of fonts. | Use the targets above. Report differences. |
+| A2 | Title stays visible from 640px at 28px. | Yes. |
+| A3 | On phones, New note stretches to fill the space right of the stats. | Yes. Alternative: fixed 108px width. |
+| A4 | At 320px the layout stacks full width. | Yes. |
+| A5 | Desktop top padding (`lg:pt-11` in `AppShell.jsx`, shared by all routes) stays unchanged. | Unchanged. Changing it affects every route. |
+| A6 | Commit, push and deployment are allowed for this change. | Yes (user request). |
+
+Open question for the user: reduce the desktop top padding for `/items` only (A5)? Default: no.

@@ -76,9 +76,14 @@ Caches (recent category, tag selection) are replaced by DB columns / direct quer
 - Desktop uses a persistent workspace rail; mobile uses an accessible slide-over menu. Content adapts
   without horizontal overflow.
 - Below 640px, the sticky app bar is a compact row with navigation, current page title, a Notebook-only
-  Find toggle, and sign out. At every width, the Notebook page presents a compact row with its focusable
-  title, three live stats, and New note action; its filter/search panel is closed on load and is opened
-  or closed only by the app-bar Find toggle. The toggle shows an active-filter indicator while hidden
+  Find toggle, and sign out. At every width, the Notebook page presents a compact row with its
+  focusable title, three live stats, and New note action; its stats use compact inline 16px values and
+  8px phone / 9px desktop labels, and the 28px desktop title aligns with a compact 36px desktop action. Counts keep their
+  units for assistive technology without repeating them visually. The row fits on one line at widths
+  from 360px and uses a two-line layout below that, with stats above a full-width New note action.
+  When no collections exist, the phone link reads “New collection” and its visible text is its accessible name.
+  Keep the row's vertical gap to the list tight. The filter/search panel is closed on load
+  and is opened or closed only by the app-bar Find toggle. The toggle shows an active-filter indicator while hidden
   filters still apply. Filter tools remain available in the panel. On create forms, Cancel and Add to
   notebook stay in the form header.
 - Use Tailwind utilities and locally owned shadcn/ui primitives; use `lucide-react` icons with
@@ -211,3 +216,5 @@ Frontend runtime variables (nginx container): `GOOGLE_CLIENT_ID`, `MICROSOFT_CLI
   destructive-action pending/errors. Notebook coverage also verifies its compact stats/New note row,
   all-width closed-by-default search/filter panel and app-bar Find toggle, active-filter indicator,
   filter state reset on route changes, responsive overflow, and create-form actions in the header.
+  The Notebook top-row tests assert compact type sizes, button alignment, reduced row/gap heights and
+  the 320px wrap order, including three-digit totals and the compact no-collection action.

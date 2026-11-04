@@ -52,7 +52,9 @@ async function mockApi(page, state = {}) {
     }
     if (pathname === "/api/categories/recent") return json({ categoryId: state.noCategories ? null : "c1" });
     if (pathname === "/api/items" && method === "GET") {
-      return state.itemsError ? json({ detail: state.itemsErrorMessage || "Notes are unavailable." }, 503) : json(items);
+      if (state.itemsError) return json({ detail: state.itemsErrorMessage || "Notes are unavailable." }, 503);
+      const result = state.itemCount === undefined ? items : Array.from({ length: state.itemCount }, (_, index) => ({ ...items[index % items.length], id: `count-item-${index}`, name: `Stat fixture ${index + 1}` }));
+      return json(result);
     }
     if (pathname === "/api/items" && method === "POST") {
       counts.itemPosts += 1;
@@ -189,13 +191,15 @@ test("phone toolbar, collapsed filters and compact stats work together", async (
   await expect.poll(() => heading.evaluate((node) => node === document.activeElement)).toBe(true);
   await expect(page.getByText("Your personal index", { exact: true })).toHaveCount(0);
   await expect(page.getByText("Notes, small plans and loose ends—kept together, without the noise.", { exact: true })).toHaveCount(0);
-  await expect.poll(() => page.getByTestId("notebook-stats").evaluate((node) => [...node.querySelectorAll(":scope > div > p:nth-child(2)")].map((value) => value.textContent))).toEqual(["18 notes", "18 active", "2 lists"]);
+  await expect.poll(() => page.getByTestId("notebook-stats").evaluate((node) => [...node.querySelectorAll(":scope > div > span:nth-child(2)")].map((value) => value.textContent))).toEqual(["18 notes", "18 active", "2 lists"]);
   await expect(page.getByTestId("notebook-top-row").getByText("01", { exact: true })).toHaveCount(0);
   const statCells = page.getByTestId("notebook-stats").locator(":scope > div");
-  const statLabels = statCells.locator(":scope > p:first-child");
+  const statLabels = statCells.locator(":scope > span:first-child");
   await expect(statLabels).toHaveCount(3);
-  for (let index = 0; index < 3; index += 1) await expect(statLabels.nth(index)).toHaveCSS("font-size", "9px");
-  const statUnits = statCells.locator(":scope > p:nth-child(2) > span");
+  for (let index = 0; index < 3; index += 1) await expect(statLabels.nth(index)).toHaveCSS("font-size", "8px");
+  const statValues = statCells.locator(":scope > span:nth-child(2)");
+  for (let index = 0; index < 3; index += 1) await expect(statValues.nth(index)).toHaveCSS("font-size", "16px");
+  const statUnits = statValues.locator(":scope > span");
   for (let index = 0; index < 3; index += 1) {
     await expect(statUnits.nth(index)).toHaveClass(/sr-only/);
     await expect(statUnits.nth(index)).toHaveCSS("position", "absolute");
@@ -233,13 +237,18 @@ test("phone toolbar, collapsed filters and compact stats work together", async (
     const rect = node.getBoundingClientRect();
     return rect.top + rect.height / 2;
   })));
-  expect(Math.abs(centers[0] - centers[1])).toBeLessThanOrEqual(4);
+  expect(Math.abs(centers[0] - centers[1])).toBeLessThanOrEqual(2);
+  const [statsBox, noteBox] = await Promise.all([statsGrid, newNote].map((element) => element.boundingBox()));
+  expect(statsBox.x + statsBox.width).toBeLessThanOrEqual(noteBox.x);
+  expect(Math.abs((await newNote.boundingBox()).height - 40)).toBeLessThanOrEqual(0.1);
 
   await page.setViewportSize({ width: 320, height: 640 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
   const [narrowButton, narrowStats] = await Promise.all([newNote, statsGrid].map((element) => element.evaluate((node) => node.getBoundingClientRect().toJSON())));
-  expect(narrowButton.bottom).toBeLessThanOrEqual(narrowStats.top);
+  expect(narrowStats.bottom).toBeLessThanOrEqual(narrowButton.top);
+  expect(narrowButton.width).toBeGreaterThanOrEqual(250);
   expect(narrowStats.width).toBeGreaterThanOrEqual(228);
+  expect((await page.getByTestId("notebook-top-row").boundingBox()).height).toBeLessThanOrEqual(84);
   expect(consoleErrors).toEqual([]);
 });
 
@@ -280,39 +289,57 @@ test("notebook top row is compact and filter tools only appear after Find is ope
     const row = page.getByTestId("notebook-top-row");
     const stats = page.getByTestId("notebook-stats");
     const newNote = page.getByRole("button", { name: "New note" });
+    const rowOrderClasses = await row.locator(":scope > *").evaluateAll((nodes) => nodes.flatMap((node) => [...node.classList].filter((name) => name.startsWith("order-"))));
+    expect(rowOrderClasses).toEqual([]);
     const title = page.getByRole("heading", { name: "The notebook." });
-    if (width >= 640) await expect(title).toBeVisible();
+    if (width >= 640) {
+      await expect(title).toBeVisible();
+      await expect(title).toHaveCSS("font-size", "28px");
+    }
     else await expect(title.evaluate((node) => getComputedStyle(node).position)).resolves.toBe("absolute");
     const statCells = stats.locator(":scope > div");
-    const statLabels = statCells.locator(":scope > p:first-child");
+    const statLabels = statCells.locator(":scope > span:first-child");
     await expect(statLabels).toHaveCount(3);
-    for (let index = 0; index < 3; index += 1) await expect(statLabels.nth(index)).toHaveCSS("font-size", "9px");
-    const statUnits = statCells.locator(":scope > p:nth-child(2) > span");
+    for (let index = 0; index < 3; index += 1) await expect(statLabels.nth(index)).toHaveCSS("font-size", width < 640 ? "8px" : "9px");
+    const statValues = statCells.locator(":scope > span:nth-child(2)");
+    expect((await stats.boundingBox()).height).toBeLessThanOrEqual(32);
+    for (let index = 0; index < 3; index += 1) await expect(statValues.nth(index)).toHaveCSS("font-size", "16px");
+    const statUnits = statValues.locator(":scope > span");
     for (let index = 0; index < 3; index += 1) {
-      if (width < 640) {
-        await expect(statUnits.nth(index)).toHaveCSS("position", "absolute");
-      } else {
-        await expect(statUnits.nth(index)).toHaveCSS("position", "static");
-        await expect(statUnits.nth(index)).toBeVisible();
-      }
+      await expect(statUnits.nth(index)).toHaveClass(/sr-only/);
+      await expect(statUnits.nth(index)).toHaveCSS("position", "absolute");
     }
     await expect(newNote).toBeVisible();
+    expect(Math.abs((await newNote.boundingBox()).height - (width < 640 ? 40 : 36))).toBeLessThanOrEqual(0.1);
+    await expect(newNote.locator("svg")).toHaveCSS("width", "14px");
     await expect(page.getByRole("button", { name: "Find notes" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Import" })).toBeHidden();
     await expect(page.getByRole("button", { name: "Export" })).toBeHidden();
     await expect(page.getByRole("button", { name: "Sort tags" })).toBeHidden();
     const statsAndAction = await Promise.all([stats, newNote].map((element) => element.evaluate((node) => {
       const rect = node.getBoundingClientRect();
-      return { top: rect.top, bottom: rect.bottom, center: rect.top + rect.height / 2 };
+      return { top: rect.top, bottom: rect.bottom, left: rect.left, right: rect.right, height: rect.height, center: rect.top + rect.height / 2 };
     })));
-    if (width === 320) expect(statsAndAction[1].bottom).toBeLessThanOrEqual(statsAndAction[0].top);
-    else if (width < 640 || width >= 768) expect(Math.abs(statsAndAction[0].center - statsAndAction[1].center)).toBeLessThanOrEqual(4);
+    if (width === 320) {
+      expect(statsAndAction[0].bottom).toBeLessThanOrEqual(statsAndAction[1].top);
+      expect(statsAndAction[1].right - statsAndAction[1].left).toBeGreaterThanOrEqual(250);
+      expect((await row.boundingBox()).height).toBeLessThanOrEqual(84);
+    } else {
+      expect(Math.abs(statsAndAction[0].center - statsAndAction[1].center)).toBeLessThanOrEqual(2);
+      expect(statsAndAction[0].right).toBeLessThanOrEqual(statsAndAction[1].left);
+      expect((await row.boundingBox()).height).toBeLessThanOrEqual((width >= 640 ? 36 : 40) + 0.1);
+    }
+    if (width === 375 || width === 640 || width === 1024 || width === 1280) {
+      const rowBottom = (await row.boundingBox()).y + (await row.boundingBox()).height;
+      const notesTop = await page.getByRole("heading", { name: "Recent notes" }).evaluate((node) => node.getBoundingClientRect().top);
+      expect(notesTop - rowBottom).toBeLessThanOrEqual(16);
+    }
     if (width === 1024 || width === 1280) {
       const rowBox = await row.boundingBox();
-      expect(rowBox.height).toBeLessThanOrEqual(72);
+      expect(rowBox.height).toBeLessThanOrEqual(36.1);
       const notes = page.getByRole("heading", { name: "Recent notes" });
       const notesTop = await notes.evaluate((node) => node.getBoundingClientRect().top);
-      expect(notesTop).toBeLessThanOrEqual(220);
+      expect(notesTop).toBeLessThanOrEqual(170);
     }
     await page.getByRole("button", { name: "Find notes" }).click();
     await expect(page.getByRole("button", { name: "Import" })).toBeVisible();
@@ -321,6 +348,39 @@ test("notebook top row is compact and filter tools only appear after Find is ope
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
     await page.getByRole("button", { name: "Find notes" }).click();
     await expect(page.getByRole("button", { name: "Import" })).toBeHidden();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
+});
+
+test("three-digit note totals still fit beside the New note action", async ({ page }) => {
+  await mockApi(page, { itemCount: 100 });
+  for (const width of [360, 375]) {
+    await page.setViewportSize({ width, height: 667 });
+    await page.goto("/items");
+    await expect.poll(() => page.getByTestId("notebook-stats").locator(":scope > div > span:nth-child(2)").first().textContent()).toContain("100");
+    const row = await page.getByTestId("notebook-top-row").boundingBox();
+    const stats = await page.getByTestId("notebook-stats").boundingBox();
+    const action = await page.getByRole("button", { name: "New note" }).boundingBox();
+    expect(Math.abs(stats.y + stats.height / 2 - (action.y + action.height / 2))).toBeLessThanOrEqual(2);
+    expect(stats.x + stats.width).toBeLessThanOrEqual(action.x);
+      expect(row.height).toBeLessThanOrEqual(40.1);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
+});
+
+test("single-digit stats still force the full-width New note onto the second line at 320px", async ({ page }) => {
+  await mockApi(page, { itemCount: 0 });
+  for (const width of [320, 359]) {
+    await page.setViewportSize({ width, height: 640 });
+    await page.goto("/items");
+    const row = page.getByTestId("notebook-top-row");
+    const stats = page.getByTestId("notebook-stats");
+    const newNote = page.getByRole("button", { name: "New note" });
+    await expect.poll(() => stats.locator(":scope > div > span:nth-child(2)").first().textContent()).toContain("0");
+    const [statsBox, actionBox, rowBox] = await Promise.all([stats, newNote, row].map((element) => element.boundingBox()));
+    expect(statsBox.y + statsBox.height).toBeLessThanOrEqual(actionBox.y);
+    expect(actionBox.width).toBeGreaterThanOrEqual(250);
+    expect(rowBox.height).toBeLessThanOrEqual(84);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
   }
 });
@@ -350,12 +410,26 @@ test("notebook top row handles collection errors and empty collections", async (
   await page.getByRole("button", { name: "Find notes" }).click();
   await expect(page.locator("#notebook-filters")).toBeVisible();
 
-  await mockApi(page, { noCategories: true });
-  await page.goto("/items");
-  await expect(page.getByTestId("notebook-top-row").getByRole("link", { name: "Create a collection" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "New note" })).toHaveCount(0);
-  await page.getByRole("button", { name: "Find notes" }).click();
-  await expect(page.locator("#notebook-filters")).toBeVisible();
+  await mockApi(page, { noCategories: true, itemCount: 100 });
+  for (const width of [360, 375]) {
+    await page.setViewportSize({ width, height: 667 });
+    await page.goto("/items");
+    const emptyRow = page.getByTestId("notebook-top-row");
+    const stats = page.getByTestId("notebook-stats");
+    const createCollection = emptyRow.getByRole("link", { name: "New collection", exact: true });
+    await expect(createCollection).toBeVisible();
+    expect(await createCollection.evaluate((link) => link.innerText)).toBe("New collection");
+    await expect(createCollection).toHaveAccessibleName("New collection");
+    await expect(page.getByRole("button", { name: "New note" })).toHaveCount(0);
+    await expect.poll(() => stats.locator(":scope > div > span:nth-child(2)").first().textContent()).toContain("100");
+    const [statsBox, actionBox, rowBox] = await Promise.all([stats, createCollection, emptyRow].map((element) => element.boundingBox()));
+    expect(Math.abs(statsBox.y + statsBox.height / 2 - (actionBox.y + actionBox.height / 2))).toBeLessThanOrEqual(2);
+    expect(statsBox.x + statsBox.width).toBeLessThanOrEqual(actionBox.x);
+    expect(rowBox.height).toBeLessThanOrEqual(40.1);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    await page.getByRole("button", { name: "Find notes" }).click();
+    await expect(page.locator("#notebook-filters")).toBeVisible();
+  }
 });
 
 test("phone topbar titles match other workspace routes and Find stays Notebook-only", async ({ page }) => {
