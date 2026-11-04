@@ -368,15 +368,15 @@ test("three-digit note totals still fit beside the New note action", async ({ pa
   }
 });
 
-test("single-digit stats still force the full-width New note onto the second line at 320px", async ({ page }) => {
-  await mockApi(page, { itemCount: 0 });
-  for (const width of [320, 359]) {
+test("zero and normal stats force the full-width New note onto the second line below 360px", async ({ page }) => {
+  for (const [width, itemCount] of [[320, 0], [320, 18], [359, 0], [359, 18]]) {
+    await mockApi(page, { itemCount });
     await page.setViewportSize({ width, height: 640 });
     await page.goto("/items");
     const row = page.getByTestId("notebook-top-row");
     const stats = page.getByTestId("notebook-stats");
     const newNote = page.getByRole("button", { name: "New note" });
-    await expect.poll(() => stats.locator(":scope > div > span:nth-child(2)").first().textContent()).toContain("0");
+    await expect.poll(() => stats.locator(":scope > div > span:nth-child(2)").first().textContent()).toContain(String(itemCount));
     const [statsBox, actionBox, rowBox] = await Promise.all([stats, newNote, row].map((element) => element.boundingBox()));
     expect(statsBox.y + statsBox.height).toBeLessThanOrEqual(actionBox.y);
     expect(actionBox.width).toBeGreaterThanOrEqual(250);
@@ -406,7 +406,7 @@ test("notebook top row handles collection errors and empty collections", async (
   await expect(errorBanner).toBeVisible();
   expect(await errorBanner.evaluate((node) => node.getBoundingClientRect().top)).toBeGreaterThanOrEqual(rowBottom);
   await expect(row.getByRole("button", { name: "New note" })).toHaveCount(0);
-  await expect(row.getByRole("link", { name: "Create a collection" })).toHaveCount(0);
+  await expect(row.getByRole("link")).toHaveCount(0);
   await page.getByRole("button", { name: "Find notes" }).click();
   await expect(page.locator("#notebook-filters")).toBeVisible();
 

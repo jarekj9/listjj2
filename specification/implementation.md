@@ -322,7 +322,7 @@ Defaults below apply unless the user overrides them.
 
 ## Notebook row layout (revision 3)
 
-Status: implementation, build, 17 responsive Playwright tests and clean review complete; deployment in progress. Date: 2026-11-04. Baseline: deployed revision 2 (verified in the browser: `notebook-top-row` present, filter panel closed on load).
+Status: implementation, build and 17 responsive Playwright tests complete; clean final review passed; CI publication and deployment pending. Date: 2026-11-04. Baseline: deployed revision 2 (verified in the browser: `notebook-top-row` present, filter panel closed on load).
 Scope: frontend `/items` header, its Playwright tests, docs and the deployment explicitly requested by the user. No backend, API, data, dependency or `package.json` change. Supersedes revision 2 row sizing, stat-unit display, wrapping, order and margins only; revision 2 Find/filter behavior stays in force.
 
 ### 1. Objective
@@ -366,7 +366,7 @@ Code facts (`frontend/src/pages/ItemsPage.jsx`):
 
 **R5. New note placement.**
 - Wrapper: `flex flex-auto justify-end sm:flex-none sm:ml-auto`.
-- Button (`newNoteAction`, L133): compact 12px text, explicit 14px icon, reduced horizontal padding, `h-10 w-auto max-[360px]:w-full sm:h-9` (40px phone, 36px from 640px; full-width only when the row wraps below 360px).
+- Button (`newNoteAction`, L133): compact 11px phone / 12px desktop text, explicit 14px icon, reduced horizontal padding, `h-10 w-auto max-[360px]:w-full sm:h-9` (40px phone, 36px from 640px; full-width only when the row wraps below 360px).
 - Action wrapper: `max-[360px]:basis-full` forces the second line below 360px even with zero/single-digit counts; it aligns to the right beside stats from 360px.
 - Vertically centred with the stats (`items-center`). Keep text "New note" / "Close note", icon, `aria-*` and toggle behaviour.
 - The "Create a collection" link uses the same wrapper; phones show "New collection" and this visible text provides its accessible name. At 640px+, the visible and accessible name is "Create a collection". No New note when collections fail (unchanged).

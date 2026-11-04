@@ -3,7 +3,7 @@
 **Start Time:** 04-11-2026 20:23
 **Finish Time:** Not finished
 **Status:** In progress
-**Progress:** 75%
+**Progress:** 78%
 
 ## Tasks
 
@@ -12,7 +12,8 @@
 * [x] Redesign the stats and New note row to be smaller and shorter
 * [x] Update architecture, implementation and progress documentation
 * [x] Run responsive tests, build and visual validation
-* [x] Resolve review findings and obtain a clean independent review
+* [x] Resolve first revision 3 review findings
+* [x] Fix post-review/CI edge findings and obtain a clean final review
 * [ ] Publish and deploy the reviewed frontend image
 * [ ] Smoke-test deployment and complete final review
 
@@ -22,7 +23,7 @@ Publish and deploy
 
 ## Notes
 
-Revision 2 is deployed to `192.168.0.26:8093` as `sha-3510adada812e6ec8d73842de9096cc9b665bee3`; endpoint smoke checks passed, backend and `listjj2-data` were untouched. Revision 3 passes the Vite production build and all 17 Playwright tests; final reviewer returned “No actionable issues found.” User requested deployment. Existing untracked `AGENTS.md` and `instruction.md` are unrelated; preserve and do not include them. Specification: `specification/implementation.md` revision 3.
+Revision 2 remains deployed to `192.168.0.26:8093` as `sha-3510adada812e6ec8d73842de9096cc9b665bee3`. Previous CI run `41909700414` failed before the final breakpoint fixes. Final reviewer now returns “No actionable issues found.” Windows and WSL/Linux each pass all 17 Playwright tests; Vite production build passes. Pushing the reviewed follow-up for CI publication, then deploying revision 3. Existing untracked `AGENTS.md` and `instruction.md` are unrelated; preserve and do not include them. Specification: `specification/implementation.md` revision 3.
 
 ## Previous task history
 
