@@ -1,5 +1,8 @@
 # Mobile UI refinements: implementation specification
 
+> This completed specification records the earlier mobile-only revision. Its Notebook filter breakpoint,
+> in-page disclosure, hero and stats-row requirements were superseded by [revision 2](../specification/implementation.md#notebook-top-row-and-filter-toggle-revision-2).
+
 Status: complete. Date: 2026-11-02.
 Scope: frontend only, plus tests, docs and deployment.
 
@@ -184,7 +187,7 @@ Add:
    build, GHCR push). Do not bypass failures. Get the full SHA with `git rev-parse HEAD`.
 3. `ssh debian`, then in `/home/debian/skrypty/docker/listjj2`:
    - Sync `docker-compose.yml` (expected unchanged; sync anyway per `README.md`).
-   - In the existing `.env`, change only `IMAGE_TAG=sha-<full-sha>`. Do not print or overwrite secrets.
+   - In the existing `.env`, change only `IMAGE_TAG=sha-<full-commit-sha>`. Do not print or overwrite secrets.
      Keep `FRONTEND_PORT=8093`.
    - `docker compose pull frontend && docker compose up -d --no-deps frontend`
    - Never run `docker compose down -v`. Do not restart or recreate the backend. Keep volume `listjj2-data`.

@@ -48,9 +48,9 @@ async function mockApi(page, state = {}) {
       });
     }
     if (pathname === "/api/categories" && method === "GET") {
-      return state.categoriesError ? json({ detail: "Collections are unavailable." }, 503) : json(categories);
+      return state.categoriesError ? json({ detail: "Collections are unavailable." }, 503) : json(state.noCategories ? [] : categories);
     }
-    if (pathname === "/api/categories/recent") return json({ categoryId: "c1" });
+    if (pathname === "/api/categories/recent") return json({ categoryId: state.noCategories ? null : "c1" });
     if (pathname === "/api/items" && method === "GET") {
       return state.itemsError ? json({ detail: state.itemsErrorMessage || "Notes are unavailable." }, 503) : json(items);
     }
@@ -148,7 +148,7 @@ test("long user data stays inside the mobile viewport and select popup", async (
   await expect(badge).toHaveAttribute("title", longName);
   expect(await badge.evaluate((node) => node.getBoundingClientRect().width)).toBeLessThanOrEqual(200);
 
-  await page.getByRole("button", { name: "Find & filter" }).click();
+  await page.getByRole("button", { name: "Find notes" }).click();
   await page.getByRole("combobox", { name: "Collection" }).click();
   const popup = page.locator('[data-slot="select-content"]');
   await expect(popup).toBeVisible();
@@ -187,29 +187,47 @@ test("phone toolbar, collapsed filters and compact stats work together", async (
   await expect(heading).toBeAttached();
   await expect(heading).toHaveClass(/sr-only/);
   await expect.poll(() => heading.evaluate((node) => node === document.activeElement)).toBe(true);
-  await expect(page.locator('section[aria-labelledby="notebook-title"] > header > div > p').first()).toBeHidden();
-  await expect(page.getByText("Notes, small plans and loose ends—kept together, without the noise.", { exact: true })).toBeHidden();
+  await expect(page.getByText("Your personal index", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Notes, small plans and loose ends—kept together, without the noise.", { exact: true })).toHaveCount(0);
+  await expect.poll(() => page.getByTestId("notebook-stats").evaluate((node) => [...node.querySelectorAll(":scope > div > p:nth-child(2)")].map((value) => value.textContent))).toEqual(["18 notes", "18 active", "2 lists"]);
+  await expect(page.getByTestId("notebook-top-row").getByText("01", { exact: true })).toHaveCount(0);
+  const statCells = page.getByTestId("notebook-stats").locator(":scope > div");
+  const statLabels = statCells.locator(":scope > p:first-child");
+  await expect(statLabels).toHaveCount(3);
+  for (let index = 0; index < 3; index += 1) await expect(statLabels.nth(index)).toHaveCSS("font-size", "9px");
+  const statUnits = statCells.locator(":scope > p:nth-child(2) > span");
+  for (let index = 0; index < 3; index += 1) {
+    await expect(statUnits.nth(index)).toHaveClass(/sr-only/);
+    await expect(statUnits.nth(index)).toHaveCSS("position", "absolute");
+  }
 
   const filters = page.locator("#notebook-filters");
-  const disclosure = page.getByRole("button", { name: /Find & filter/ });
+  await expect(page.getByTestId("notebook-filter-dot")).toBeVisible();
+  await expect(findToggle).toHaveAttribute("aria-describedby", "notebook-filter-status");
+  await expect(page.locator("#notebook-filter-status")).toHaveText("Filters active");
   await expect(filters).toBeHidden();
-  await expect(disclosure).toHaveAttribute("aria-expanded", "false");
+  await expect(page.getByRole("button", { name: "Import" })).toBeHidden();
+  await expect(page.getByRole("button", { name: "Export" })).toBeHidden();
+  await expect(page.getByRole("button", { name: "Sort tags" })).toBeHidden();
   await expect(findToggle).toHaveAttribute("aria-expanded", "false");
   await findToggle.click();
   await expect(filters).toBeVisible();
-  await expect(page.getByRole("searchbox", { name: "Find something" })).toBeFocused();
+  const searchbox = page.getByRole("searchbox", { name: "Find something" });
+  await expect(searchbox).toBeFocused();
+  const searchTop = await searchbox.evaluate((node) => node.getBoundingClientRect().top);
+  const toolbarBottom = await toolbar.evaluate((node) => node.getBoundingClientRect().bottom);
+  expect(searchTop).toBeGreaterThanOrEqual(toolbarBottom);
   await expect(findToggle).toHaveAttribute("aria-expanded", "true");
-  await disclosure.click();
-  await expect(filters).toBeHidden();
-  await expect(disclosure).toHaveAttribute("aria-expanded", "false");
-  await expect(disclosure).toBeFocused();
-  await disclosure.click();
-  await expect(page.getByRole("searchbox", { name: "Find something" })).toBeFocused();
+  await expect(page.getByRole("button", { name: "Import" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Export" })).toBeVisible();
+  await page.getByRole("button", { name: "Clear" }).click();
+  await expect(page.getByTestId("notebook-filter-dot")).toHaveCount(0);
+  await expect(findToggle).not.toHaveAttribute("aria-describedby", "notebook-filter-status");
   await findToggle.click();
   await expect(filters).toBeHidden();
   await expect(findToggle).toBeFocused();
 
-  const statsGrid = page.getByTestId("mobile-stats-grid");
+  const statsGrid = page.getByTestId("notebook-stats");
   const newNote = page.getByRole("button", { name: "New note" });
   const centers = await Promise.all([statsGrid, newNote].map((element) => element.evaluate((node) => {
     const rect = node.getBoundingClientRect();
@@ -225,31 +243,132 @@ test("phone toolbar, collapsed filters and compact stats work together", async (
   expect(consoleErrors).toEqual([]);
 });
 
-test("filter disclosure is always expanded at 640px and up", async ({ page }) => {
+test("filter panel stays closed by default at every width", async ({ page }) => {
   await mockApi(page);
-  await page.setViewportSize({ width: 639, height: 720 });
-  await page.goto("/items");
-  await expect(page.locator("#notebook-filters")).toBeHidden();
+  for (const width of [320, 375, 639, 640, 768, 1024, 1280]) {
+    await page.setViewportSize({ width, height: 720 });
+    await page.goto("/items");
+    await expect(page.locator("#notebook-filters")).toBeHidden();
+    expect(await page.locator("#notebook-filters").getAttribute("hidden")).not.toBeNull();
+    const findToggle = page.getByRole("button", { name: "Find notes" });
+    await expect(findToggle).toBeVisible();
+    await expect(findToggle).toHaveAttribute("aria-expanded", "false");
+    await findToggle.click();
+    await expect(page.locator("#notebook-filters")).toBeVisible();
+    await expect(findToggle).toHaveAttribute("aria-expanded", "true");
+    await findToggle.click();
+    await expect(page.locator("#notebook-filters")).toBeHidden();
+    await expect(findToggle).toHaveAttribute("aria-expanded", "false");
+    await findToggle.click();
+    await page.reload();
+    await expect(page.locator("#notebook-filters")).toBeHidden();
+    await expect(page.getByRole("button", { name: "Find notes" })).toHaveAttribute("aria-expanded", "false");
+  }
   await page.setViewportSize({ width: 640, height: 720 });
-  await expect(page.locator("#notebook-filters")).toBeVisible();
-  expect(await page.locator("#notebook-filters").getAttribute("hidden")).toBeNull();
-  await expect(page.getByRole("button", { name: "Find notes" })).toBeHidden();
+  await page.goto("/items");
   await expect(page.locator("header.sticky").getByText(/A personal index.*Notebook/)).toBeVisible();
   await expect(page.locator("header.sticky").getByText("Keep the useful things close.")).toBeVisible();
   expect((await page.getByRole("button", { name: "Open navigation" }).boundingBox()).width).toBe(40);
-  await page.reload();
-  expect(await page.locator("#notebook-filters").getAttribute("hidden")).toBeNull();
+  await expect(page.locator("#notebook-filters")).toBeHidden();
+});
+
+test("notebook top row is compact and filter tools only appear after Find is opened", async ({ page }) => {
+  await mockApi(page);
+  for (const [width, height] of [[320, 640], [375, 667], [640, 720], [667, 375], [768, 1024], [1024, 768], [1280, 720]]) {
+    await page.setViewportSize({ width, height });
+    await page.goto("/items");
+    const row = page.getByTestId("notebook-top-row");
+    const stats = page.getByTestId("notebook-stats");
+    const newNote = page.getByRole("button", { name: "New note" });
+    const title = page.getByRole("heading", { name: "The notebook." });
+    if (width >= 640) await expect(title).toBeVisible();
+    else await expect(title.evaluate((node) => getComputedStyle(node).position)).resolves.toBe("absolute");
+    const statCells = stats.locator(":scope > div");
+    const statLabels = statCells.locator(":scope > p:first-child");
+    await expect(statLabels).toHaveCount(3);
+    for (let index = 0; index < 3; index += 1) await expect(statLabels.nth(index)).toHaveCSS("font-size", "9px");
+    const statUnits = statCells.locator(":scope > p:nth-child(2) > span");
+    for (let index = 0; index < 3; index += 1) {
+      if (width < 640) {
+        await expect(statUnits.nth(index)).toHaveCSS("position", "absolute");
+      } else {
+        await expect(statUnits.nth(index)).toHaveCSS("position", "static");
+        await expect(statUnits.nth(index)).toBeVisible();
+      }
+    }
+    await expect(newNote).toBeVisible();
+    await expect(page.getByRole("button", { name: "Find notes" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Import" })).toBeHidden();
+    await expect(page.getByRole("button", { name: "Export" })).toBeHidden();
+    await expect(page.getByRole("button", { name: "Sort tags" })).toBeHidden();
+    const statsAndAction = await Promise.all([stats, newNote].map((element) => element.evaluate((node) => {
+      const rect = node.getBoundingClientRect();
+      return { top: rect.top, bottom: rect.bottom, center: rect.top + rect.height / 2 };
+    })));
+    if (width === 320) expect(statsAndAction[1].bottom).toBeLessThanOrEqual(statsAndAction[0].top);
+    else if (width < 640 || width >= 768) expect(Math.abs(statsAndAction[0].center - statsAndAction[1].center)).toBeLessThanOrEqual(4);
+    if (width === 1024 || width === 1280) {
+      const rowBox = await row.boundingBox();
+      expect(rowBox.height).toBeLessThanOrEqual(72);
+      const notes = page.getByRole("heading", { name: "Recent notes" });
+      const notesTop = await notes.evaluate((node) => node.getBoundingClientRect().top);
+      expect(notesTop).toBeLessThanOrEqual(220);
+    }
+    await page.getByRole("button", { name: "Find notes" }).click();
+    await expect(page.getByRole("button", { name: "Import" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Export" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Sort tags" })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    await page.getByRole("button", { name: "Find notes" }).click();
+    await expect(page.getByRole("button", { name: "Import" })).toBeHidden();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
+});
+
+test("Find filter state resets on route changes", async ({ page }) => {
+  await mockApi(page);
+  await page.goto("/items");
+  await page.getByRole("button", { name: "Find notes" }).click();
+  await expect(page.locator("#notebook-filters")).toBeVisible();
+  await page.getByRole("link", { name: /Collections/ }).first().click();
+  await expect(page.getByRole("heading", { name: "Collections." })).toBeVisible();
+  await page.getByRole("link", { name: "Notebook" }).first().click();
+  await expect(page.locator("#notebook-filters")).toBeHidden();
+});
+
+test("notebook top row handles collection errors and empty collections", async ({ page }) => {
+  await mockApi(page, { categoriesError: true });
+  await page.setViewportSize({ width: 375, height: 667 });
+  await page.goto("/items");
+  const row = page.getByTestId("notebook-top-row");
+  const rowBottom = await row.evaluate((node) => node.getBoundingClientRect().bottom);
+  const errorBanner = page.getByRole("alert").filter({ hasText: "Collections unavailable" });
+  await expect(errorBanner).toBeVisible();
+  expect(await errorBanner.evaluate((node) => node.getBoundingClientRect().top)).toBeGreaterThanOrEqual(rowBottom);
+  await expect(row.getByRole("button", { name: "New note" })).toHaveCount(0);
+  await expect(row.getByRole("link", { name: "Create a collection" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Find notes" }).click();
+  await expect(page.locator("#notebook-filters")).toBeVisible();
+
+  await mockApi(page, { noCategories: true });
+  await page.goto("/items");
+  await expect(page.getByTestId("notebook-top-row").getByRole("link", { name: "Create a collection" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "New note" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Find notes" }).click();
+  await expect(page.locator("#notebook-filters")).toBeVisible();
 });
 
 test("phone topbar titles match other workspace routes and Find stays Notebook-only", async ({ page }) => {
   await mockApi(page);
-  await page.setViewportSize({ width: 375, height: 667 });
-  for (const [path, title] of [["/categories", "Collections"], ["/users", "People"], ["/settings", "Settings"]]) {
-    await page.goto(path);
-    const toolbar = page.locator("header.sticky");
-    await expect(toolbar.getByText(title, { exact: true })).toBeVisible();
-    await expect(toolbar.getByRole("button", { name: "Find notes" })).toBeHidden();
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
+  for (const width of [375, 1280]) {
+    await page.setViewportSize({ width, height: 720 });
+    for (const [path, title] of [["/categories", "Collections"], ["/users", "People"], ["/settings", "Settings"]]) {
+      await page.goto(path);
+      const toolbar = page.locator("header.sticky");
+      if (width < 640) await expect(toolbar.getByText(title, { exact: true })).toBeVisible();
+      await expect(toolbar.getByRole("button", { name: "Find notes" })).toBeHidden();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    }
   }
 
   for (const [width, height] of [[320, 640], [375, 667], [667, 375], [768, 1024], [1280, 720]]) {
@@ -318,6 +437,7 @@ test("collection field and CSV importer are accessible and keyboard-operable", a
   await page.getByRole("button", { name: "New note" }).click();
   await expect(page.locator("form").getByRole("combobox", { name: "Collection" })).toBeVisible();
 
+  await page.getByRole("button", { name: "Find notes" }).click();
   const importer = page.getByRole("button", { name: "Import" });
   const csvInput = page.locator('input[type="file"][accept=".csv,text/csv"]');
   await expect(importer).toBeVisible();

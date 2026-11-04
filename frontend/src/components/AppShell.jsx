@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import {
   ArrowUpRight,
@@ -128,8 +128,8 @@ function WorkspaceNav({ user, onNavigate }) {
 export default function AppShell({ children }) {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
-  const [filtersOpen, setFiltersOpen] = useState(() => window.matchMedia("(min-width: 640px)").matches);
-  const focusSearchOnOpen = useRef(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filtersActive, setFiltersActive] = useState(false);
   const location = useLocation();
   const pathname = location.pathname;
   const currentLink = [
@@ -140,28 +140,8 @@ export default function AppShell({ children }) {
   const notebookRoute = pathname === "/items" || pathname.startsWith("/items/");
 
   useEffect(() => {
-    const media = window.matchMedia("(min-width: 640px)");
-    const syncBreakpoint = () => setFiltersOpen(media.matches);
-    media.addEventListener("change", syncBreakpoint);
-    return () => media.removeEventListener("change", syncBreakpoint);
-  }, []);
-
-  useEffect(() => {
-    setFiltersOpen(window.matchMedia("(min-width: 640px)").matches);
+    setFiltersOpen(false);
   }, [pathname]);
-
-  useEffect(() => {
-    if (!filtersOpen || !focusSearchOnOpen.current) return;
-    focusSearchOnOpen.current = false;
-    const searchInput = document.getElementById("item-search");
-    searchInput?.focus({ preventScroll: true });
-    searchInput?.scrollIntoView({ block: "nearest" });
-  }, [filtersOpen]);
-
-  const openFilters = () => {
-    focusSearchOnOpen.current = true;
-    setFiltersOpen(true);
-  };
 
   return (
     <div className="app-shell min-h-screen bg-background">
@@ -195,7 +175,23 @@ export default function AppShell({ children }) {
               <span className="size-1.5 rounded-full bg-[#789b6b]" />
               Private workspace
             </span>
-            {notebookRoute && <Button type="button" variant="ghost" size="icon" aria-label="Find notes" aria-expanded={filtersOpen} aria-controls="notebook-filters" onClick={() => filtersOpen ? setFiltersOpen(false) : openFilters()} className="size-11 rounded-xl text-[#526258] hover:bg-white sm:hidden"><Search size={18} aria-hidden="true" /></Button>}
+            {notebookRoute && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label="Find notes"
+                aria-expanded={filtersOpen}
+                aria-controls="notebook-filters"
+                aria-describedby={filtersActive ? "notebook-filter-status" : undefined}
+                onClick={() => setFiltersOpen((value) => !value)}
+                className="relative size-11 rounded-xl text-[#526258] hover:bg-white"
+              >
+                <Search size={18} aria-hidden="true" />
+                {filtersActive && <span data-testid="notebook-filter-dot" aria-hidden="true" className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-[#729256]" />}
+              </Button>
+            )}
+            {notebookRoute && filtersActive && <span id="notebook-filter-status" className="sr-only">Filters active</span>}
             <Button variant="ghost" size="sm" aria-label="Sign out" onClick={logout} className="size-11 rounded-xl px-0 text-[#526258] hover:bg-white sm:size-auto sm:gap-2 sm:px-3">
               <LogOut size={16} aria-hidden="true" />
               <span className="hidden sm:inline">Sign out</span>
@@ -204,7 +200,7 @@ export default function AppShell({ children }) {
         </header>
 
         <main className="workspace-main px-4 pb-12 pt-4 sm:px-7 sm:pt-9 lg:px-10 lg:pt-11">
-          <NotebookFilterContext.Provider value={{ filtersOpen, setFiltersOpen, openFilters }}>
+          <NotebookFilterContext.Provider value={{ filtersOpen, setFiltersOpen, filtersActive, setFiltersActive }}>
             <div className="page-enter">{children}</div>
           </NotebookFilterContext.Provider>
           <footer className="mt-16 flex flex-wrap items-center justify-between gap-2 border-t border-[#e1e4dc] pt-4 text-[10px] text-[#58675d]">

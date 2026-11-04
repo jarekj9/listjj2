@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowDownWideNarrow, ChevronDown, Download, FileUp, LoaderCircle, Plus, Search, X } from "lucide-react";
+import { ArrowDownWideNarrow, Download, FileUp, LoaderCircle, Plus, Search, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api.js";
 import EmptyState from "../components/EmptyState.jsx";
 import ItemCard from "../components/ItemCard.jsx";
 import ItemForm from "../components/ItemForm.jsx";
 import MessageBanner from "../components/MessageBanner.jsx";
-import PageHeader from "../components/PageHeader.jsx";
 import { Button } from "../components/ui/button.jsx";
 import { Input } from "../components/ui/input.jsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select.jsx";
@@ -24,8 +23,9 @@ function FilterDate({ label, value, onChange, min, max }) {
 
 export default function ItemsPage() {
   const navigate = useNavigate();
-  const { filtersOpen, setFiltersOpen, openFilters } = useNotebookFilters();
+  const { filtersOpen, setFiltersActive } = useNotebookFilters();
   const importInput = useRef(null);
+  const filterSection = useRef(null);
   const [categories, setCategories] = useState([]);
   const [categoryError, setCategoryError] = useState("");
   const [categoryId, setCategoryId] = useState("");
@@ -130,53 +130,38 @@ export default function ItemsPage() {
   const activeCount = items.filter((item) => item.active).length;
   const selectedCategoryName = categoryId ? categories.find((category) => category.id === categoryId)?.name || "Selected collection" : "All your notes";
   const filtersActive = Boolean(search || categoryId || dateFrom || dateTo);
-  const newNoteAction = categoryError ? null : categories.length ? <Button onClick={() => setAdding((value) => !value)} className="h-11 gap-2 rounded-xl bg-[#244b3d] px-4 text-white shadow-[0_6px_16px_-10px_rgba(23,58,44,.7)] hover:bg-[#1c3c30]"><Plus size={17} aria-hidden="true" />{adding ? "Close note" : "New note"}</Button> : <Button asChild className="h-11 rounded-xl bg-[#244b3d] px-4 text-white hover:bg-[#1c3c30]"><Link to="/categories">Create a collection</Link></Button>;
+  const newNoteAction = categoryError ? null : categories.length ? <Button onClick={() => setAdding((value) => !value)} className="h-10 gap-1.5 rounded-xl bg-[#244b3d] px-3 text-white shadow-[0_6px_16px_-10px_rgba(23,58,44,.7)] hover:bg-[#1c3c30]"><Plus size={16} aria-hidden="true" />{adding ? "Close note" : "New note"}</Button> : <Button asChild className="h-10 rounded-xl bg-[#244b3d] px-3 text-white hover:bg-[#1c3c30]"><Link to="/categories">Create a collection</Link></Button>;
+
+  useEffect(() => {
+    setFiltersActive(filtersActive);
+    return () => setFiltersActive(false);
+  }, [filtersActive, setFiltersActive]);
+
+  useEffect(() => {
+    if (filtersOpen) filterSection.current?.querySelector("#item-search")?.focus();
+  }, [filtersOpen]);
 
   return (
     <section aria-labelledby="notebook-title">
-      <PageHeader
-        id="notebook-title"
-        number="01"
-        eyebrow="Your personal index"
-        title="The notebook."
-        description="Notes, small plans and loose ends—kept together, without the noise."
-        action={newNoteAction}
-        compactOnMobile
-      />
+      <header data-testid="notebook-top-row" className="mb-4 flex min-w-0 flex-wrap items-center justify-between gap-x-2 gap-y-3 sm:mb-5 sm:gap-x-4">
+        <h1 id="notebook-title" data-page-title tabIndex={-1} className="sr-only min-w-0 font-serif tracking-tight text-[#20382d] sm:not-sr-only sm:order-1 sm:text-[2.25rem] sm:leading-none">The notebook.</h1>
+        <div data-testid="notebook-stats" className="order-2 grid min-w-[216px] flex-1 grid-cols-3 min-[360px]:order-1 sm:order-2 sm:min-w-[300px] sm:flex-none">
+          <div className="min-w-0 pl-1 sm:pl-0"><p className="m-0 whitespace-nowrap font-mono text-[9px] uppercase tracking-[.08em] text-[#58675d] sm:tracking-[.13em]">In view</p><p className="mb-0 mt-0.5 font-serif text-xl leading-none text-[#294638]">{items.length}<span className="sr-only sm:not-sr-only sm:ml-1 sm:text-sm sm:text-[#58675d]"> notes</span></p></div>
+          <div className="min-w-0 border-l border-[#e4e7df] px-2 sm:px-3"><p className="m-0 whitespace-nowrap font-mono text-[9px] uppercase tracking-[.08em] text-[#58675d] sm:tracking-[.13em]">In progress</p><p className="mb-0 mt-0.5 font-serif text-xl leading-none text-[#294638]">{activeCount}<span className="sr-only sm:not-sr-only sm:ml-1 sm:text-sm sm:text-[#58675d]"> active</span></p></div>
+          <div className="min-w-0 border-l border-[#e4e7df] pl-2 sm:pl-3"><p className="m-0 whitespace-nowrap font-mono text-[9px] uppercase tracking-[.08em] text-[#58675d] sm:tracking-[.13em]">Collected in</p><p className="mb-0 mt-0.5 font-serif text-xl leading-none text-[#294638]">{categories.length}<span className="sr-only sm:not-sr-only sm:ml-1 sm:text-sm sm:text-[#58675d]"> lists</span></p></div>
+        </div>
+        {newNoteAction && <div className="order-1 ml-auto max-[359px]:order-1 min-[360px]:order-2 sm:order-3">{newNoteAction}</div>}
+      </header>
 
       {categoryError && <MessageBanner className="mb-5 mt-0" title="Collections unavailable">{categoryError}<Button type="button" variant="outline" size="sm" onClick={loadCategories} className="ml-2 h-7 rounded-lg">Retry</Button></MessageBanner>}
 
-      <div data-testid="mobile-stats-row" className="mb-4 flex min-w-0 flex-wrap items-center gap-2 py-1 sm:hidden">
-        {categoryError ? null : categories.length ? <Button onClick={() => setAdding((value) => !value)} className="order-1 h-10 shrink-0 gap-1.5 rounded-xl bg-[#244b3d] px-2.5 text-xs text-white hover:bg-[#1c3c30] min-[360px]:order-2"><Plus size={15} aria-hidden="true" />{adding ? "Close note" : "New note"}</Button> : <Button asChild className="order-1 h-10 shrink-0 rounded-xl bg-[#244b3d] px-2.5 text-xs text-white hover:bg-[#1c3c30] min-[360px]:order-2"><Link to="/categories">Create a collection</Link></Button>}
-        <div data-testid="mobile-stats-grid" className="order-2 grid min-w-[228px] flex-1 grid-cols-3 min-[360px]:order-1">
-          <div className="min-w-0 pl-1"><p className="m-0 whitespace-nowrap font-mono text-[9px] uppercase tracking-[.13em] text-[#58675d]">In view</p><p className="mb-0 mt-0.5 font-serif text-xl leading-none text-[#294638]">{items.length}<span className="sr-only"> notes</span></p></div>
-          <div className="min-w-0 border-l border-[#e4e7df] px-2"><p className="m-0 whitespace-nowrap font-mono text-[9px] uppercase tracking-[.13em] text-[#58675d]">In progress</p><p className="mb-0 mt-0.5 font-serif text-xl leading-none text-[#294638]">{activeCount}<span className="sr-only"> active</span></p></div>
-          <div className="min-w-0 border-l border-[#e4e7df] pl-2"><p className="m-0 whitespace-nowrap font-mono text-[9px] uppercase tracking-[.13em] text-[#58675d]">Collected in</p><p className="mb-0 mt-0.5 font-serif text-xl leading-none text-[#294638]">{categories.length}<span className="sr-only"> lists</span></p></div>
-        </div>
-      </div>
-
-      <div className="mb-6 hidden grid-cols-3 border-y border-[#e0e4db] py-3.5 sm:mb-7 sm:grid sm:py-4">
-        <div className="pl-1 sm:pl-3"><p className="m-0 font-mono text-[9px] uppercase tracking-[.16em] text-[#58675d]">In view</p><p className="mb-0 mt-1 font-serif text-2xl text-[#294638]">{items.length}<span className="ml-1 text-sm text-[#58675d]">notes</span></p></div>
-        <div className="border-l border-[#e4e7df] pl-4 sm:pl-7"><p className="m-0 font-mono text-[9px] uppercase tracking-[.16em] text-[#58675d]">In progress</p><p className="mb-0 mt-1 font-serif text-2xl text-[#294638]">{activeCount}<span className="ml-1 text-sm text-[#58675d]">active</span></p></div>
-        <div className="border-l border-[#e4e7df] pl-4 sm:pl-7"><p className="m-0 font-mono text-[9px] uppercase tracking-[.16em] text-[#58675d]">Collected in</p><p className="mb-0 mt-1 font-serif text-2xl text-[#294638]">{categories.length}<span className="ml-1 text-sm text-[#58675d]">lists</span></p></div>
-      </div>
-
-      <section className="rounded-2xl border border-[#e0e4db] bg-[#fffefa] p-3 shadow-[0_10px_34px_-32px_rgba(31,54,40,.5)] sm:p-4" aria-label="Filter notebook">
-        <button type="button" aria-expanded={filtersOpen} aria-controls="notebook-filters" onClick={() => filtersOpen ? setFiltersOpen(false) : openFilters()} className="flex min-h-10 w-full items-center justify-between gap-3 rounded-xl px-1 text-left sm:hidden">
-          <span className="flex min-w-0 items-center gap-2">
-            <span className="font-mono text-[10px] font-semibold uppercase tracking-[.12em] text-[#344f3e]">Find &amp; filter</span>
-            {filtersActive && <span className="size-1.5 shrink-0 rounded-full bg-[#729256]" aria-label="Filters active" />}
-            <span className="min-w-0 truncate text-[10px] text-[#58675d]">{selectedCategoryName}</span>
-          </span>
-          <ChevronDown size={16} className={`shrink-0 text-[#58675d] transition-transform ${filtersOpen ? "rotate-180" : ""}`} aria-hidden="true" />
-        </button>
-        <div id="notebook-filters" hidden={!filtersOpen}>
+      <section ref={filterSection} id="notebook-filters" hidden={!filtersOpen} className="rounded-2xl border border-[#e0e4db] bg-[#fffefa] p-3 shadow-[0_10px_34px_-32px_rgba(31,54,40,.5)] sm:p-4" aria-label="Filter notebook">
         <div className="grid gap-3 xl:grid-cols-[minmax(180px,1.5fr)_minmax(150px,.9fr)_minmax(125px,.7fr)_minmax(125px,.7fr)_auto] xl:items-end">
           <label htmlFor="item-search" className="flex min-w-0 flex-col gap-1.5">
             <span className="font-mono text-[9px] uppercase tracking-[.13em] text-[#58675d]">Find something</span>
             <span className="relative">
               <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#58675d]" aria-hidden="true" />
-              <Input id="item-search" type="search" placeholder="Words, tags, or !to exclude" value={search} onChange={(event) => setSearch(event.target.value)} className="scroll-mt-16 h-10 rounded-xl border-[#e0e4db] bg-[#fbfbf7] pl-9 pr-9 text-[12px] shadow-none placeholder:text-[#68766c]" />
+              <Input id="item-search" type="search" placeholder="Words, tags, or !to exclude" value={search} onChange={(event) => setSearch(event.target.value)} className="scroll-mt-20 h-10 rounded-xl border-[#e0e4db] bg-[#fbfbf7] pl-9 pr-9 text-[12px] shadow-none placeholder:text-[#68766c]" />
               {search && <button type="button" aria-label="Clear search" onClick={() => setSearch("")} className="absolute right-2 top-1/2 grid size-7 -translate-y-1/2 place-items-center rounded-lg text-[#58675d] hover:bg-[#edf0e8]"><X size={14} /></button>}
             </span>
           </label>
@@ -212,7 +197,6 @@ export default function ItemsPage() {
             <Button type="button" variant="ghost" size="sm" onClick={() => importInput.current?.click()} className="h-8 gap-1.5 rounded-lg px-2.5 text-[10px] text-[#56695c]"><FileUp size={13} aria-hidden="true" />Import</Button>
             <input ref={importInput} type="file" accept=".csv,text/csv" tabIndex={-1} aria-hidden="true" className="sr-only" onChange={importCsv} />
           </div>
-        </div>
         </div>
       </section>
 

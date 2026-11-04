@@ -76,11 +76,11 @@ Caches (recent category, tag selection) are replaced by DB columns / direct quer
 - Desktop uses a persistent workspace rail; mobile uses an accessible slide-over menu. Content adapts
   without horizontal overflow.
 - Below 640px, the sticky app bar is a compact row with navigation, current page title, a Notebook-only
-  Find toggle, and sign out. The Notebook page starts with its search/filter controls collapsed; both
-  Find controls share state, and filters are expanded at 640px and wider. The mobile Notebook header
-  hides its decorative hero copy while retaining a focusable page title, and presents compact stats
-  beside the New note action. On create forms, Cancel and Add to notebook stay in the form header.
-  Desktop page-header, stats, and filter layouts remain expanded and unchanged.
+  Find toggle, and sign out. At every width, the Notebook page presents a compact row with its focusable
+  title, three live stats, and New note action; its filter/search panel is closed on load and is opened
+  or closed only by the app-bar Find toggle. The toggle shows an active-filter indicator while hidden
+  filters still apply. Filter tools remain available in the panel. On create forms, Cancel and Add to
+  notebook stay in the form header.
 - Use Tailwind utilities and locally owned shadcn/ui primitives; use `lucide-react` icons with
   accessible labels. Avoid motion libraries; only small CSS transitions are needed.
 - Preserve functionality on `/login`, `/register`, `/items`, `/categories`, `/users`, and `/settings`,
@@ -195,7 +195,7 @@ Frontend runtime variables (nginx container): `GOOGLE_CLIENT_ID`, `MICROSOFT_CLI
 - Home server: `/home/debian/skrypty/docker/listjj2` contains `docker-compose.yml` and `.env`.
   SQLite uses the named Docker volume `listjj2-data`; PostgreSQL data uses `./volumes/postgres`.
   For each deployment, sync the reviewed `docker-compose.yml`, set
-  `IMAGE_TAG=sha-<full-reviewed-commit-sha>` in the existing `.env` without overwriting secrets, then
+  `IMAGE_TAG=sha-<full-commit-sha>` in the existing `.env` without overwriting secrets, then
   pull/recreate only the frontend with
   `docker compose pull frontend && docker compose up -d --no-deps frontend`. Never remove the named
   volume. The home server exposes nginx on host port `8093`; local compose defaults to `8092`. nginx
@@ -208,6 +208,6 @@ Frontend runtime variables (nginx container): `GOOGLE_CLIENT_ID`, `MICROSOFT_CLI
   items (ordering, move, search), files, CSV, external API, MCP initialize/tool call.
 - Frontend: `npm run test:e2e` and `npm run build` must succeed; Playwright tests cover route titles/focus,
   320px long-data overflow, mobile navigation, accessible CSV/collection controls, role retry and
-  destructive-action pending/errors. Mobile UI regression coverage also checks the compact phone
-  topbar, default-collapsed filters and shared Find controls, 639/640px behavior, stats/New note
-  alignment and overflow, and create-form actions in the header.
+  destructive-action pending/errors. Notebook coverage also verifies its compact stats/New note row,
+  all-width closed-by-default search/filter panel and app-bar Find toggle, active-filter indicator,
+  filter state reset on route changes, responsive overflow, and create-form actions in the header.

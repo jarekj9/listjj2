@@ -50,7 +50,7 @@ Images are built by GitHub Actions (`.github/workflows/docker-publish.yml`) on p
 tests run before publication. Each image is published with a full commit-SHA tag.
 
 For every deployment, first update the server's compose file from the reviewed checkout and set
-`IMAGE_TAG=sha-<reviewed-full-commit-sha>` in its existing `.env` (preserve all secrets and
+`IMAGE_TAG=sha-<full-commit-sha>` in its existing `.env` (preserve all secrets and
 `FRONTEND_PORT=8093`):
 
 ```bash
