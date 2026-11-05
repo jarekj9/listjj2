@@ -322,7 +322,7 @@ Defaults below apply unless the user overrides them.
 
 ## Notebook row layout (revision 3)
 
-Status: implementation, build and 17 responsive Playwright tests complete; clean final review passed; CI publication and deployment pending. Date: 2026-11-04. Baseline: deployed revision 2 (verified in the browser: `notebook-top-row` present, filter panel closed on load).
+Status: complete and deployed. Commit `4e61cc669317e9958c37e216efb82e87578a5dcd` passed Actions run `41914763944`; deployed frontend tag `sha-4e61cc669317e9958c37e216efb82e87578a5dcd` at `192.168.0.26:8093`. Date: 2026-11-04.
 Scope: frontend `/items` header, its Playwright tests, docs and the deployment explicitly requested by the user. No backend, API, data, dependency or `package.json` change. Supersedes revision 2 row sizing, stat-unit display, wrapping, order and margins only; revision 2 Find/filter behavior stays in force.
 
 ### 1. Objective

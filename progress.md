@@ -1,9 +1,9 @@
 # Progress
 
 **Start Time:** 04-11-2026 20:23
-**Finish Time:** Not finished
-**Status:** In progress
-**Progress:** 78%
+**Finish Time:** 05-11-2026 10:39
+**Status:** Complete
+**Progress:** 100%
 
 ## Tasks
 
@@ -14,16 +14,17 @@
 * [x] Run responsive tests, build and visual validation
 * [x] Resolve first revision 3 review findings
 * [x] Fix post-review/CI edge findings and obtain a clean final review
-* [ ] Publish and deploy the reviewed frontend image
-* [ ] Smoke-test deployment and complete final review
+* [x] Publish the reviewed frontend image
+* [x] Deploy it to the home server
+* [x] Smoke-test deployment and complete final review
 
 ## Current Phase
 
-Publish and deploy
+Complete
 
 ## Notes
 
-Revision 2 remains deployed to `192.168.0.26:8093` as `sha-3510adada812e6ec8d73842de9096cc9b665bee3`. Previous CI run `41909700414` failed before the final breakpoint fixes. Final reviewer now returns “No actionable issues found.” Windows and WSL/Linux each pass all 17 Playwright tests; Vite production build passes. Pushing the reviewed follow-up for CI publication, then deploying revision 3. Existing untracked `AGENTS.md` and `instruction.md` are unrelated; preserve and do not include them. Specification: `specification/implementation.md` revision 3.
+Revision 3 commit `4e61cc669317e9958c37e216efb82e87578a5dcd` passed GitHub Actions run `41914763944` (backend tests, 17 Playwright tests, frontend build and both image publications); final reviewer returned “No actionable issues found.” Deployed frontend tag `sha-4e61cc669317e9958c37e216efb82e87578a5dcd` at `192.168.0.26:8093`. `/login`, `/items`, `/api/docs`, and `/api/health` returned HTTP 200. With mocked API routes, production UI smoke tests at 375px and 1280px verified 40px/36px rows, centered stats/action, working Find toggle, and no console errors. Backend was not recreated; `listjj2-data` remains. Authenticated smoke testing was unavailable without a test account. Pre-existing untracked `AGENTS.md` and `instruction.md` remain untouched.
 
 ## Previous task history
 
