@@ -476,7 +476,7 @@ Open question for the user: reduce the desktop top padding for `/items` only (A5
 
 ## Modern Dark frontend redesign (2026-11)
 
-Status: reviewed; branch `modern_dark`. The new design replaces the former warm mineral / pine / citrus palette with the user-specified near-black, graphite, quiet grey, bright white and restrained mint system. Apply the design to the existing workspace application, not a marketing page. Preserve routes, copy, content, interactions and the current React/Tailwind/shadcn stack.
+Status: in progress on branch `modern_dark`. The new design replaces the former warm mineral / pine / citrus palette with the user-specified near-black, graphite, quiet grey, bright white and restrained mint system. Apply the design to the existing workspace application, not a marketing page. Preserve routes, copy, content, interactions and the current React/Tailwind/shadcn stack.
 
 ### Requirements
 
@@ -489,7 +489,7 @@ Status: reviewed; branch `modern_dark`. The new design replaces the former warm 
 ### Acceptance checks
 
 1. Build and all existing E2E tests pass, with new checks for exact tokens, dark mode, visible focus, and reduced motion.
-2. `/items`, `/categories`, `/users`, `/settings`, `/login`, and `/register` stay legible and usable at 320/375/640/1280px, without overflow or console errors.
+2. `/items`, `/categories`, `/users`, `/settings`, `/login`, and `/register` stay legible and usable at 320/375/640/1280px, including bounded optional sign-in widgets, without overflow or console errors.
 3. Manual/Playwright rendered checks confirm page/panel contrast, action states, mobile behavior, keyboard focus and reduced motion.
 4. Root `specification.md` and `progress.md` describe the implementation. No README change unless setup or deploy instructions change.
 5. Review before publishing/deployment. Publish only a verified SHA-specific frontend; deploy only frontend to the home server; preserve the backend and data volume.

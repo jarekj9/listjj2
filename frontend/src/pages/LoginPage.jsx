@@ -120,7 +120,7 @@ export default function LoginPage() {
       </form>
 
         {(config.googleClientId || config.microsoftClientId) && <div className="my-7 flex items-center gap-3 text-[9px] font-mono uppercase tracking-[.16em] text-[#58675d]"><span className="h-px flex-1 bg-[#e3e6df]" />Or use a connected account<span className="h-px flex-1 bg-[#e3e6df]" /></div>}
-      <div className="grid gap-3">
+      <div data-testid="auth-providers" className="grid gap-3">
         {config.googleClientId && <div ref={googleRef} className="flex min-h-11 justify-center [&_div]:max-w-full" />}
         {config.microsoftClientId && <Button type="button" disabled={busy} variant="outline" onClick={microsoftLogin} className="h-11 rounded-xl border-[#dfe4da] bg-[#fffefa] text-xs text-[#43584a] shadow-none hover:bg-[#f0f3ec]">Continue with Microsoft</Button>}
       </div>

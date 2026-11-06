@@ -617,6 +617,26 @@ test("Modern Dark covers each existing route and keeps delayed loading visible",
   expect((skeletonLuminance + 0.05) / (0.0044 + 0.05)).toBeGreaterThanOrEqual(3);
 });
 
+test("third-party auth widgets remain contained at narrow auth widths", async ({ page }) => {
+  for (const width of [320, 375, 640]) {
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto("/login");
+    const providerContainer = page.getByTestId("auth-providers");
+    await expect(providerContainer).toBeAttached();
+    const providerWidth = await providerContainer.evaluate((node) => {
+      const widget = document.createElement("div");
+      widget.dataset.testid = "google-signin-mock";
+      widget.style.width = `${Math.min(360, node.clientWidth || 320)}px`;
+      widget.style.height = "40px";
+      node.append(widget);
+      return { container: node.clientWidth, widget: widget.getBoundingClientRect().width };
+    });
+    expect(providerWidth.container).toBeLessThanOrEqual(width - 40);
+    expect(providerWidth.widget).toBeLessThanOrEqual(width - 40);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
+});
+
 test("collection field and CSV importer are accessible and keyboard-operable", async ({ page }, testInfo) => {
   await mockApi(page);
   await page.goto("/items");

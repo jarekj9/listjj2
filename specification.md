@@ -97,7 +97,7 @@ Caches (recent category, tag selection) are replaced by DB columns / direct quer
 - Use Tailwind utilities and locally owned shadcn/ui primitives; use `lucide-react` icons with
   accessible labels. Avoid motion libraries; only small CSS transitions are needed.
 - Preserve functionality on `/login`, `/register`, `/items`, `/categories`, `/users`, and `/settings`,
-  including auth providers, admin approval, CRUD, attachments, CSV, external API and MCP instructions.
+  including responsive third-party sign-in buttons, admin approval, CRUD, attachments, CSV, external API and MCP instructions.
 - Every route should provide usable loading, empty, error, focus, and responsive states. Page titles
   update per route, route changes move focus to the visible page heading, and auth pages retain a
   visible `h1` on mobile.
@@ -228,5 +228,5 @@ Frontend runtime variables (nginx container): `GOOGLE_CLIENT_ID`, `MICROSOFT_CLI
   the 320px wrap order, including three-digit totals and the compact no-collection action. Design checks
   assert exact Modern Dark tokens, dark color-scheme and page ground, readable display font, visible keyboard
   focus, reduced-motion behavior, primary/secondary hover states, checked and unchecked checkbox contrast,
-  visible loading skeleton contrast, all six existing routes, delayed loading, and overflow at 320px, 375px,
-  640px and 1280px.
+  visible loading skeleton contrast, all six existing routes, delayed loading, optional auth-provider widget
+  containment, and overflow at 320px, 375px, 640px and 1280px.

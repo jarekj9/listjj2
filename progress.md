@@ -9,28 +9,28 @@
 
 * [x] Analyze Modern Dark requirements, repository, and deployment workflow
 * [x] Add implementation specification and create `modern_dark` branch
-* [x] Implement the frontend redesign and regression coverage; fix review findings
-* [x] Run frontend build, E2E, and responsive visual checks
-* [x] Review implementation and resolve consequential findings
-* [ ] Wait for branch CI/image publication; deploy frontend and smoke-test
+* [x] Fix the live mobile sign-in widget overflow and add regression coverage
+* [x] Run build, E2E, and responsive checks
+* [x] Re-review the final changes
+* [ ] Merge to main, publish the reviewed SHA, redeploy and smoke-test
 
 ## Current phase
 
-Publication and deployment
+Merge and redeploy auth fix
 
 ## Step usage
 
 | Agent | Runs | Steps | Limit | Limit hit | Input | Output | Cache | Cost |
 |---|---|---|---|---|---|---|---|---|
-| build-with-reviewer | 1 | 214 | 100 | YES | 968 | 105747 | 40733841 | $0.0000 |
+| build-with-reviewer | 1 | 277 | 100 | YES | 1157 | 134042 | 62235626 | $0.0000 |
 | planer | 1 | 7 | 50 | no | 16 | 3223 | 423346 | $0.0000 |
-| reviewer | 5 | 128 | 100 | no | 415599 | 231128 | 10069120 | $0.2312 |
+| reviewer | 6 | 145 | 100 | no | 460197 | 247060 | 10772480 | $0.2496 |
 
-Total: 349 steps, 340098 output tokens, $0.2312
+Total: 429 steps, 384325 output tokens, $0.2496
 
 ## Notes
 
-Branch `modern_dark` was committed as `c2662c41259b920da680ac01a0f11c200222ba2a` and pushed. Its first CI run failed because the focus-contrast test used programmatic `.focus()` rather than keyboard navigation; changed it to press Tab, matching real `:focus-visible` behavior. Local build and all 19 E2E tests now pass; the updated test/progress changes need a new commit and CI run. Final reviewers returned “No actionable issues found” for the UI and workflow. SSH and server Docker Compose access work; remote compose lists backend/frontend. Pre-existing untracked `AGENTS.md` and `instruction.md` remain untouched. Local GitHub CLI/Docker are absent; deploy waits for a successful GHCR publication.
+Branch `modern_dark` and `master` were merged at `e76fafc7c469d73a5891d8edaeb21f18f85dd55e`; CI `42231217979` succeeded and deployed that SHA. Smoke checks returned HTTP 200 and backend/data volume stayed intact. A live browser check found 400px scroll width at 375px on `/login` when social sign-in was configured. Added a one-column base grid and regression coverage simulating the bounded provider widget at 320/375/640px. Build and all 20 E2E tests pass; reviewer returned “No actionable issues found.” Auth responsive fix still needs a new SHA published/deployed. Untracked `AGENTS.md` and `instruction.md` remain untouched.
 
 ## Previous task history
 
