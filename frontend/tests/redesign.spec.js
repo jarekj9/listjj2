@@ -538,9 +538,7 @@ test("Modern Dark tokens, dark surfaces, focus visibility and reduced motion are
   await expect(primary).toBeFocused();
   const focusOutline = await primary.evaluate((node) => ({ style: getComputedStyle(node).outlineStyle, color: getComputedStyle(node).outlineColor }));
   expect(focusOutline.style).toBe("solid");
-  const focusChannels = focusOutline.color.match(/\d+/g).slice(0, 3).map(Number);
-  const luminance = focusChannels.map((channel) => channel / 255).map((channel) => channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4).reduce((sum, channel, index) => sum + channel * [0.2126, 0.7152, 0.0722][index], 0);
-  expect((luminance + 0.05) / (0.0015 + 0.05)).toBeGreaterThanOrEqual(3);
+  await expect.poll(() => primary.evaluate((node) => getComputedStyle(node).outlineColor)).toBe("rgb(242, 242, 242)");
 
   const completed = page.getByRole("checkbox", { name: "Complete One thought" });
   await expect(completed).toHaveCSS("background-color", "rgb(242, 242, 242)");
