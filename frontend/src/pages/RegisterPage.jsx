@@ -64,7 +64,7 @@ export default function RegisterPage() {
         </div>
         <Button type="submit" disabled={busy} className="mt-1 h-11 justify-between rounded-xl bg-[#244b3d] px-4 text-[12px] font-semibold text-white hover:bg-[#1c3c30]">{busy ? "Creating your account…" : "Create account"}<ArrowRight size={15} /></Button>
       </form>
-      <p className="mb-0 mt-7 border-t border-[#e3e6df] pt-5 text-center text-xs text-[#58675d]">Already have an account? <Link to="/login" className="font-semibold text-[#244b3d] underline decoration-[#8da878] underline-offset-4">Sign in</Link></p>
+      <p className="mb-0 mt-7 border-t border-[#e3e6df] pt-5 text-center text-xs text-[#58675d]">Already have an account? <Link to="/login" className="font-semibold text-[#244b3d] underline decoration-[#303030] underline-offset-4">Sign in</Link></p>
     </AuthFrame>
   );
 }

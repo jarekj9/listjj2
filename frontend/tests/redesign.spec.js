@@ -124,6 +124,12 @@ test("short mobile navigation scrolls and closes for both nav links and the bran
   await page.goto("/items");
   await page.getByRole("button", { name: "Open navigation" }).click();
 
+  const sheet = page.locator('[data-slot="sheet-content"]');
+  await expect(sheet).toHaveCSS("background-color", "rgb(14, 14, 14)");
+  const brandMark = sheet.getByRole("link", { name: "listjj Personal index" }).locator(":scope > span").first();
+  await expect(brandMark).toHaveCSS("background-color", "rgb(14, 14, 14)");
+  await expect(brandMark).toHaveCSS("color", "rgb(166, 169, 173)");
+
   const settingsLink = page.getByRole("link", { name: "Settings & access" });
   await settingsLink.scrollIntoViewIfNeeded();
   await expect(settingsLink).toBeInViewport();
@@ -505,6 +511,112 @@ test("pending approval email wraps at 320px", async ({ page }) => {
   await expect(page.getByText(email)).toBeVisible();
 });
 
+test("Modern Dark tokens, dark surfaces, focus visibility and reduced motion are applied", async ({ page }) => {
+  await mockApi(page);
+  await page.setViewportSize({ width: 375, height: 667 });
+  await page.goto("/items");
+  const tokens = await page.evaluate(() => ({
+    ground: getComputedStyle(document.documentElement).getPropertyValue("--dp-color-ground").trim(),
+    panel: getComputedStyle(document.documentElement).getPropertyValue("--dp-color-panel").trim(),
+    bright: getComputedStyle(document.documentElement).getPropertyValue("--dp-color-bright").trim(),
+    read: getComputedStyle(document.documentElement).getPropertyValue("--dp-color-read").trim(),
+    live: getComputedStyle(document.documentElement).getPropertyValue("--dp-color-live").trim(),
+    scheme: getComputedStyle(document.documentElement).colorScheme,
+    page: getComputedStyle(document.body).backgroundColor,
+  }));
+  expect(tokens).toEqual({ ground: "#050505", panel: "#0e0e0e", bright: "#f2f2f2", read: "#a6a9ad", live: "#3fd6c6", scheme: "dark", page: "rgb(5, 5, 5)" });
+  const pageTitle = page.getByRole("heading", { name: "The notebook." });
+  await expect(pageTitle).toHaveCSS("font-family", /Modern Dark Grotesk|Geist/);
+  await expect(pageTitle).toHaveCSS("color", "rgb(242, 242, 242)");
+  await expect(page.locator("[data-live-status]").first()).toHaveCSS("background-color", "rgb(63, 214, 198)");
+
+  const primary = page.getByRole("button", { name: "New note" });
+  await expect(primary).toHaveCSS("background-color", "rgb(242, 242, 242)");
+  await expect(primary).toHaveCSS("color", "rgb(10, 10, 10)");
+  await expect(primary).toHaveCSS("border-radius", "999px");
+  await primary.focus();
+  await expect(primary).toBeFocused();
+  const focusOutline = await primary.evaluate((node) => ({ style: getComputedStyle(node).outlineStyle, color: getComputedStyle(node).outlineColor }));
+  expect(focusOutline.style).toBe("solid");
+  const focusChannels = focusOutline.color.match(/\d+/g).slice(0, 3).map(Number);
+  const luminance = focusChannels.map((channel) => channel / 255).map((channel) => channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4).reduce((sum, channel, index) => sum + channel * [0.2126, 0.7152, 0.0722][index], 0);
+  expect((luminance + 0.05) / (0.0015 + 0.05)).toBeGreaterThanOrEqual(3);
+
+  const completed = page.getByRole("checkbox", { name: "Complete One thought" });
+  await expect(completed).toHaveCSS("background-color", "rgb(242, 242, 242)");
+  await expect(completed).toHaveCSS("color", "rgb(10, 10, 10)");
+
+  await primary.hover();
+  await expect(primary).toHaveCSS("background-color", "rgb(216, 216, 216)");
+  await primary.click();
+  const keepActive = page.getByRole("checkbox", { name: /Keep it active/ });
+  await expect(keepActive).toBeChecked();
+  await keepActive.uncheck();
+  await expect(keepActive).not.toBeChecked();
+  await expect(keepActive).toHaveCSS("background-color", "rgb(14, 14, 14)");
+  await expect(keepActive).toHaveCSS("border-color", "rgb(115, 119, 124)");
+  await page.mouse.move(0, 0);
+
+  await page.getByRole("button", { name: "Find notes" }).click();
+  await expect(page.locator("#notebook-filters")).toHaveCSS("background-color", "rgb(14, 14, 14)");
+
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(page.locator(".page-enter")).toHaveCSS("animation-name", "none");
+  expect(await page.locator(".page-enter").evaluate((node) => getComputedStyle(node).animationDuration)).toBe("1e-05s");
+  const overflowingElements = await page.evaluate(() => [...document.querySelectorAll("body *")].map((node) => ({
+    tag: node.tagName,
+    className: typeof node.className === "string" ? node.className : "",
+    right: Math.round(node.getBoundingClientRect().right),
+    width: Math.round(node.getBoundingClientRect().width),
+  })).filter((node) => node.right > innerWidth + 1).slice(0, 8));
+  expect(await page.evaluate(() => document.documentElement.scrollWidth), JSON.stringify(overflowingElements)).toBeLessThanOrEqual(375);
+});
+
+test("Modern Dark covers each existing route and keeps delayed loading visible", async ({ page }) => {
+  await mockApi(page);
+  const paths = [
+    ["/items", "The notebook."],
+    ["/categories", "Collections."],
+    ["/users", "People & access."],
+    ["/settings", "Connections."],
+    ["/login", "Return to your thoughts."],
+    ["/register", "A place to keep things."],
+  ];
+
+  for (const width of [320, 375, 640, 1280]) {
+    await page.setViewportSize({ width, height: 800 });
+    for (const [path, title] of paths) {
+      await page.goto(path);
+      const heading = page.getByRole("heading", { name: title, exact: true });
+      await expect(heading).toBeVisible();
+      await expect(page.locator("body")).toHaveCSS("background-color", "rgb(5, 5, 5)");
+      await expect(heading).toHaveCSS("color", "rgb(242, 242, 242)");
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+      if (path === "/items" && width === 1280) {
+        const collectionsLink = page.getByRole("link", { name: /Collections Your own order/ });
+        await collectionsLink.hover();
+        await expect(collectionsLink).toHaveCSS("background-color", "rgb(25, 25, 25)");
+        await page.mouse.move(0, 0);
+      }
+    }
+  }
+
+  await page.route("**/api/auth/me", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ id: "admin", email: "admin@example.com", role: "Admin" }) });
+  });
+  await page.setViewportSize({ width: 375, height: 667 });
+  await page.goto("/items");
+  const skeleton = page.locator('[aria-label="Loading your workspace"] .animate-pulse').first();
+  await expect(skeleton).toBeVisible();
+  await expect(skeleton).toHaveCSS("background-color", "rgb(96, 96, 96)");
+  await expect(skeleton).toHaveCSS("animation-name", "none");
+  const skeletonColor = await skeleton.evaluate((node) => getComputedStyle(node).backgroundColor);
+  const skeletonChannels = skeletonColor.match(/\d+/g).slice(0, 3).map(Number);
+  const skeletonLuminance = skeletonChannels.map((channel) => channel / 255).map((channel) => channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4).reduce((sum, channel, index) => sum + channel * [0.2126, 0.7152, 0.0722][index], 0);
+  expect((skeletonLuminance + 0.05) / (0.0044 + 0.05)).toBeGreaterThanOrEqual(3);
+});
+
 test("collection field and CSV importer are accessible and keyboard-operable", async ({ page }, testInfo) => {
   await mockApi(page);
   await page.goto("/items");
@@ -576,7 +688,8 @@ test("settings copy names are contextual, registration approval copy is accurate
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page.getByRole("heading", { name: "Your space is ready." })).toBeVisible();
   const signInLink = page.getByRole("link", { name: /Continue to sign in/ });
-  await expect(signInLink).toHaveCSS("color", "rgb(255, 255, 255)");
+  await expect(signInLink).toHaveCSS("color", "rgb(10, 10, 10)");
+  await expect(signInLink).toHaveCSS("background-color", "rgb(242, 242, 242)");
 
   await page.goto("/items");
   await page.setViewportSize({ width: 1280, height: 700 });

@@ -1,30 +1,36 @@
 # Progress
 
-**Start Time:** 04-11-2026 20:23
-**Finish Time:** 05-11-2026 10:39
-**Status:** Complete
-**Progress:** 100%
+**Start Time:** '06-11-2026 10:00'
+**Finish Time:** Not finished
+**Status:** In progress
+**Progress:** 83%
 
 ## Tasks
 
-* [x] Analyze the refined row requirements and add revision 3 specification
-* [x] Run baseline build and frontend tests
-* [x] Redesign the stats and New note row to be smaller and shorter
-* [x] Update architecture, implementation and progress documentation
-* [x] Run responsive tests, build and visual validation
-* [x] Resolve first revision 3 review findings
-* [x] Fix post-review/CI edge findings and obtain a clean final review
-* [x] Publish the reviewed frontend image
-* [x] Deploy it to the home server
-* [x] Smoke-test deployment and complete final review
+* [x] Analyze Modern Dark requirements, repository, and deployment workflow
+* [x] Add implementation specification and create `modern_dark` branch
+* [x] Implement the frontend redesign and regression coverage; fix review findings
+* [x] Run frontend build, E2E, and responsive visual checks
+* [x] Review implementation and resolve consequential findings
+* [ ] Publish and deploy the frontend; smoke-test
 
-## Current Phase
+## Current phase
 
-Complete
+Publication and deployment
+
+## Step usage
+
+| Agent | Runs | Steps | Limit | Limit hit | Input | Output | Cache | Cost |
+|---|---|---|---|---|---|---|---|---|
+| build-with-reviewer | 1 | 179 | 100 | YES | 700 | 89459 | 30364254 | $0.0000 |
+| planer | 1 | 7 | 50 | no | 16 | 3223 | 423346 | $0.0000 |
+| reviewer | 5 | 128 | 100 | no | 415599 | 231128 | 10069120 | $0.2312 |
+
+Total: 314 steps, 323810 output tokens, $0.2312
 
 ## Notes
 
-Revision 3 commit `4e61cc669317e9958c37e216efb82e87578a5dcd` passed GitHub Actions run `41914763944` (backend tests, 17 Playwright tests, frontend build and both image publications); final reviewer returned “No actionable issues found.” Deployed frontend tag `sha-4e61cc669317e9958c37e216efb82e87578a5dcd` at `192.168.0.26:8093`. `/login`, `/items`, `/api/docs`, and `/api/health` returned HTTP 200. With mocked API routes, production UI smoke tests at 375px and 1280px verified 40px/36px rows, centered stats/action, working Find toggle, and no console errors. Backend was not recreated; `listjj2-data` remains. Authenticated smoke testing was unavailable without a test account. Pre-existing untracked `AGENTS.md` and `instruction.md` remain untouched.
+Branch `modern_dark` was created from current `master`. Final reviewers returned “No actionable issues found” for the UI and branch workflow. Latest production build passes, all 19 Playwright tests pass, and `git diff --check` is clean. SSH and server Docker Compose access work; remote compose lists backend/frontend. Planner invocation was denied by tool permission; pre-existing untracked `AGENTS.md` and `instruction.md` remain untouched. Local GitHub CLI and Docker are absent. `modern_dark` is not yet present on origin; branch publication, CI, and deployment remain pending.
 
 ## Previous task history
 

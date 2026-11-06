@@ -126,7 +126,7 @@ export default function LoginPage() {
       </div>
 
       <div className="mt-8 border-t border-[#e3e6df] pt-5 text-center text-xs text-[#58675d]">
-        New to Listjj? <Link to="/register" className="font-semibold text-[#315843] underline decoration-[#b7c99b] underline-offset-4 hover:text-[#1e3c2e]">Create an account</Link>
+        New to Listjj? <Link to="/register" className="font-semibold text-[#315843] underline decoration-[#303030] underline-offset-4 hover:text-[#1e3c2e]">Create an account</Link>
       </div>
     </AuthFrame>
   );

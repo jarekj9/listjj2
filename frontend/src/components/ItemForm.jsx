@@ -71,7 +71,7 @@ export default function ItemForm({ item, categories, tags = [], defaultCategoryI
 
       {error && <MessageBanner id={`item-error-${listId}`} title="Could not save" className="my-0">{error}</MessageBanner>}
 
-      <div className="grid gap-x-5 gap-y-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2">
         <div className="space-y-2 sm:col-span-2">
           <Label htmlFor={`item-name-${listId}`} className="text-[11px] font-semibold text-[#42594a]">Title <span className="text-[#9e4035">*</span></Label>
           <Input id={`item-name-${listId}`} value={form.name} onChange={set("name")} placeholder="Something worth keeping" maxLength={500} autoFocus className="h-11 rounded-xl border-[#dce2d8] bg-white text-sm shadow-none placeholder:text-[#68766c]" required />

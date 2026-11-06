@@ -38,7 +38,7 @@ const links = [
 
 function Brand({ onNavigate }) {
   return (
-    <Link to="/items" onClick={onNavigate} className="flex w-fit items-center gap-3 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-[#d9ed9c]">
+    <Link to="/items" onClick={onNavigate} className="flex w-fit items-center gap-3 rounded-lg outline-none focus-visible:ring-2">
       <span className="grid size-10 place-items-center rounded-[13px] bg-[#d9ed9c] text-[#1c3b2f]">
         <BookOpenText size={20} strokeWidth={1.9} aria-hidden="true" />
       </span>
@@ -67,21 +67,20 @@ function WorkspaceNav({ user, onNavigate }) {
             className={({ isActive }) =>
               cn(
                 "group flex min-h-[56px] items-center gap-3 rounded-xl px-3.5 py-2.5 transition-colors duration-150",
-                isActive ? "bg-[#d9ed9c]" : "text-[#e4ebe4] hover:bg-white/[0.07] hover:text-white"
+                isActive ? "bg-[#191919] text-[#f2f2f2]" : "text-[#a6a9ad] hover:bg-white/[0.07] hover:text-white"
               )
             }
-            style={({ isActive }) => isActive ? { color: "#1e3e31" } : undefined}
           >
             {({ isActive }) => (
               <>
-                <span className={cn("grid size-9 shrink-0 place-items-center rounded-lg", isActive ? "" : "bg-white/[0.07] group-hover:bg-white/[0.12]")} style={isActive ? { backgroundColor: "#c8e285" } : undefined}>
+                <span className={cn("grid size-9 shrink-0 place-items-center rounded-lg", isActive ? "bg-[#222222]" : "bg-white/[0.07] group-hover:bg-white/[0.12]")}>
                   <Icon size={17} strokeWidth={1.8} aria-hidden="true" />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-[13px] font-semibold leading-5">{label}</span>
-                <span className="block truncate text-[10px] leading-4" style={{ color: isActive ? "#405a49" : "#c2d0c5" }}>{detail}</span>
+                <span className="block truncate text-[10px] leading-4 text-[#8a8d91]">{detail}</span>
                 </span>
-                <span className="font-mono text-[9px]" style={{ color: isActive ? "#405a49" : "#b5c4b8" }}>0{index + 1}</span>
+                <span className="font-mono text-[9px] text-[#8a8d91]">0{index + 1}</span>
               </>
             )}
           </NavLink>
@@ -172,7 +171,7 @@ export default function AppShell({ children }) {
           </div>
           <div className="ml-1 flex shrink-0 items-center gap-0.5 sm:ml-3 sm:gap-3">
             <span className="hidden items-center gap-2 rounded-full border border-[#dce3d7] bg-white/70 px-3 py-1.5 text-[10px] text-[#637267] sm:inline-flex">
-              <span className="size-1.5 rounded-full bg-[#789b6b]" />
+              <span data-live-status className="size-1.5 rounded-full" />
               Private workspace
             </span>
             {notebookRoute && (
@@ -188,7 +187,7 @@ export default function AppShell({ children }) {
                 className="relative size-11 rounded-xl text-[#526258] hover:bg-white"
               >
                 <Search size={18} aria-hidden="true" />
-                {filtersActive && <span data-testid="notebook-filter-dot" aria-hidden="true" className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-[#729256]" />}
+                {filtersActive && <span data-live-status data-testid="notebook-filter-dot" aria-hidden="true" className="absolute right-1.5 top-1.5 size-1.5 rounded-full" />}
               </Button>
             )}
             {notebookRoute && filtersActive && <span id="notebook-filter-status" className="sr-only">Filters active</span>}

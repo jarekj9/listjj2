@@ -65,7 +65,7 @@ export default function ItemCard({ item, categories, tags, canMove, onChanged, o
 
   if (editing) {
     return (
-      <article className="rounded-2xl border border-[#d9e0d5] bg-[#fffefa] p-4 shadow-[0_14px_36px_-32px_rgba(29,55,43,.55)] sm:p-6">
+      <article className="rounded-2xl border border-[#d9e0d5] bg-[#fffefa] p-4 sm:p-6">
         <ItemForm item={item} categories={categories} tags={tags} submitLabel="Save changes" onSubmit={save} onCancel={() => setEditing(false)} />
         <FileList item={item} onError={onError} onChanged={onChanged} />
       </article>

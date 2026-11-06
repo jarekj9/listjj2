@@ -76,7 +76,7 @@ function RequireUser() {
   if (!user.role) {
     return (
       <main className="grid min-h-screen place-items-center px-5 py-10">
-        <section className="w-full max-w-lg rounded-[2rem] border border-[#e0e5dc] bg-[#fffefa] p-7 shadow-[0_24px_80px_-48px_rgba(25,56,46,.4)] sm:p-10" aria-labelledby="approval-title">
+        <section className="w-full max-w-lg rounded-[2rem] border border-[#e0e5dc] bg-[#fffefa] p-7 sm:p-10" aria-labelledby="approval-title">
           <div className="mb-7 flex items-center gap-3">
             <span className="grid size-11 place-items-center rounded-2xl bg-[#d9ed9c] text-[#244b3d]"><NotebookPen size={20} aria-hidden="true" /></span>
             <span className="font-serif text-2xl tracking-tight text-[#20382d]">listjj</span>

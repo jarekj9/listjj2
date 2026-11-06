@@ -19,7 +19,7 @@ README.md               human: setup & deployment (concise)
 specification.md        this file (keep up to date)
 docker-compose.yml      deployment on the home server (pulls images from GHCR)
 .env.example            variables for docker-compose
-.github/workflows/      docker-publish.yml: build + push images to GHCR on push to master
+.github/workflows/      docker-publish.yml: build + push images to GHCR on master / modern_dark pushes
 backend/
   pyproject.toml
   Dockerfile
@@ -71,10 +71,18 @@ Caches (recent category, tag selection) are replaced by DB columns / direct quer
 
 ## 3.1 Frontend design system
 
-- Visual direction: editorial personal-workspace UI with a warm mineral background, deep-pine
-  navigation, restrained citrus accent, expressive serif page headings, and readable sans-serif UI.
-- Desktop uses a persistent workspace rail; mobile uses an accessible slide-over menu. Content adapts
-  without horizontal overflow.
+- Visual direction: Modern Dark personal-workspace UI. Use `#050505` ground, `#0e0e0e` graphite panels,
+  `#222222`/`#303030` hairlines, `#f2f2f2` bright statements, `#a6a9ad` reading text, `#8a8d91` metadata,
+  and `#3fd6c6` only for small live/selected indicators. Use Geist-style regular sans for display and
+  reading, Geist Mono for labels/numbers, a shared 1360px content max, 48px desktop gutters, 6px panel
+  corners, pill actions, and 120ms ease-out control transitions.
+- Keep reading areas opaque and legible. Primary actions are bright filled with dark ink; secondary actions
+  are dark outlined. Show offset keyboard focus, honor reduced motion, and avoid colored glows, glass,
+  decorative animation, invented sections, sample metrics, or fabricated product states. Use static white
+  light only where it does not obscure content.
+- Desktop uses a persistent workspace rail; mobile uses an accessible slide-over menu. Keep current page
+  content, copy, layouts and responsive behavior; do not replace this functional application with a
+  marketing page. Content adapts without horizontal overflow.
 - Below 640px, the sticky app bar is a compact row with navigation, current page title, a Notebook-only
   Find toggle, and sign out. At every width, the Notebook page presents a compact row with its
   focusable title, three live stats, and New note action; its stats use compact inline 16px values and
@@ -194,9 +202,9 @@ Frontend runtime variables (nginx container): `GOOGLE_CLIENT_ID`, `MICROSOFT_CLI
 
 ## 9. Build & deploy
 
-- GitHub Actions (`.github/workflows/docker-publish.yml`) on push to `master`: runs backend pytest,
+- GitHub Actions (`.github/workflows/docker-publish.yml`) on push to `master` and `modern_dark`: runs backend pytest,
   frontend Playwright tests and the frontend production build before publishing `backend/` and
-  `frontend/` to GHCR. Images carry `latest` plus immutable full-SHA tags.
+  `frontend/` to GHCR. Images carry immutable full-SHA tags; only `master` updates the `latest` alias.
 - Home server: `/home/debian/skrypty/docker/listjj2` contains `docker-compose.yml` and `.env`.
   SQLite uses the named Docker volume `listjj2-data`; PostgreSQL data uses `./volumes/postgres`.
   For each deployment, sync the reviewed `docker-compose.yml`, set
@@ -217,4 +225,8 @@ Frontend runtime variables (nginx container): `GOOGLE_CLIENT_ID`, `MICROSOFT_CLI
   all-width closed-by-default search/filter panel and app-bar Find toggle, active-filter indicator,
   filter state reset on route changes, responsive overflow, and create-form actions in the header.
   The Notebook top-row tests assert compact type sizes, button alignment, reduced row/gap heights and
-  the 320px wrap order, including three-digit totals and the compact no-collection action.
+  the 320px wrap order, including three-digit totals and the compact no-collection action. Design checks
+  assert exact Modern Dark tokens, dark color-scheme and page ground, readable display font, visible keyboard
+  focus, reduced-motion behavior, primary/secondary hover states, checked and unchecked checkbox contrast,
+  visible loading skeleton contrast, all six existing routes, delayed loading, and overflow at 320px, 375px,
+  640px and 1280px.

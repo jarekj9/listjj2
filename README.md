@@ -46,8 +46,9 @@ regular accounts remain pending until approved from the Users page.
 
 ## Deploy to the home server
 
-Images are built by GitHub Actions (`.github/workflows/docker-publish.yml`) on pushes to `master`;
-tests run before publication. Each image is published with a full commit-SHA tag.
+Images are built by GitHub Actions (`.github/workflows/docker-publish.yml`) on pushes to `master` and
+`modern_dark`; tests run before publication. Each image is published with a full commit-SHA tag. Only
+`master` updates `latest`; deploy using the reviewed full SHA tag.
 
 For every deployment, first update the server's compose file from the reviewed checkout and set
 `IMAGE_TAG=sha-<full-commit-sha>` in its existing `.env` (preserve all secrets and

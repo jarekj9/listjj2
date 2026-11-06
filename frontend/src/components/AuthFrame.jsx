@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 export default function AuthFrame({ eyebrow, title, description, children }) {
   return (
-    <main className="grid min-h-screen bg-[#f5f5ef] lg:grid-cols-[minmax(360px,0.88fr)_1.12fr]">
+    <main className="auth-frame grid min-h-screen bg-[#050505] lg:grid-cols-[minmax(360px,0.88fr)_1.12fr]">
       <aside className="auth-dark relative hidden min-h-screen flex-col overflow-hidden bg-[#19382e] px-10 py-9 text-white lg:flex xl:px-14">
         <Link to="/login" className="relative z-10 flex w-fit items-center gap-3 rounded-lg">
           <span className="grid size-10 place-items-center rounded-[13px] bg-[#d9ed9c] text-[#1e3d31]"><Leaf size={20} aria-hidden="true" /></span>

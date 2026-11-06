@@ -45,11 +45,12 @@ This document records execution order and acceptance checks.
 
 ## Frontend redesign task
 
+> Original palette direction below was superseded by [Modern Dark frontend redesign (2026-11)](#modern-dark-frontend-redesign-2026-11).
+
 ### Design direction
 
-- Make Listjj feel like an editorial personal-workspace product, not a generic dashboard: warm mineral
-  canvas, deep pine navigation, restrained citrus accent, display serif for page titles, readable sans
-  for controls, and compact mono labels only for metadata.
+- Use the Modern Dark palette, Geist-style display/reading type and Geist Mono labels defined by the current
+  design section at the end of this file; retain the editorial personal-workspace hierarchy and existing app shell.
 - Use a fixed desktop workspace rail, a mobile slide-over navigation, consistent spacing, clear page
   hierarchy, keyboard-visible focus, and reduced-motion-aware transitions.
 - Use Tailwind CSS v4 and local shadcn/ui primitives for buttons, fields, select, badges, alerts,
@@ -472,3 +473,27 @@ After CI passes for the pushed commit:
 | A6 | Commit, push and deployment are allowed for this change. | Yes (user request). |
 
 Open question for the user: reduce the desktop top padding for `/items` only (A5)? Default: no.
+
+## Modern Dark frontend redesign (2026-11)
+
+Status: reviewed; branch `modern_dark`. The new design replaces the former warm mineral / pine / citrus palette with the user-specified near-black, graphite, quiet grey, bright white and restrained mint system. Apply the design to the existing workspace application, not a marketing page. Preserve routes, copy, content, interactions and the current React/Tailwind/shadcn stack.
+
+### Requirements
+
+- Exact design tokens: ground `#050505`, panel `#0e0e0e`, hairlines `#222222`/`#303030`, bright `#f2f2f2`, reading `#a6a9ad`, meta `#8a8d91`, live `#3fd6c6`, inverse ink `#0a0a0a`, dim `#96999d`; face Geist-style regular sans and Geist Mono.
+- Shared content maximum 1360px, desktop gutters 48px, 24px grid gap, panel radius 6px, pill action buttons, 120ms ease-out transitions.
+- Restyle app shell, nav, header, all existing pages, states, forms, dialogs and shared primitives consistently. Keep reading surfaces opaque and legible. Bright filled primary actions, dark outlined secondary actions, visible offset keyboard focus. Mint marks only small live/selected state.
+- Keep current responsive layout, route focus, accessible labels/order, reduced-motion support and all current behavior. Static white light is optional; do not add invented sections/data or decorative motion.
+- No backend, API, data, route, behavior or dependency change.
+
+### Acceptance checks
+
+1. Build and all existing E2E tests pass, with new checks for exact tokens, dark mode, visible focus, and reduced motion.
+2. `/items`, `/categories`, `/users`, `/settings`, `/login`, and `/register` stay legible and usable at 320/375/640/1280px, without overflow or console errors.
+3. Manual/Playwright rendered checks confirm page/panel contrast, action states, mobile behavior, keyboard focus and reduced motion.
+4. Root `specification.md` and `progress.md` describe the implementation. No README change unless setup or deploy instructions change.
+5. Review before publishing/deployment. Publish only a verified SHA-specific frontend; deploy only frontend to the home server; preserve the backend and data volume.
+
+### Branch publication and deployment
+
+The Docker workflow also runs for `modern_dark` pushes, in addition to `master`. It always publishes the immutable full-SHA tag, but `latest` remains reserved for `master`. Deploy only the reviewed SHA-tagged frontend on the home server; do not recreate the backend or touch the persistent data volume. The implementation reviewer returned “No actionable issues found.”

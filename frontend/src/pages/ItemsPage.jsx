@@ -130,7 +130,7 @@ export default function ItemsPage() {
   const activeCount = items.filter((item) => item.active).length;
   const selectedCategoryName = categoryId ? categories.find((category) => category.id === categoryId)?.name || "Selected collection" : "All your notes";
   const filtersActive = Boolean(search || categoryId || dateFrom || dateTo);
-  const newNoteAction = categoryError ? null : categories.length ? <Button onClick={() => setAdding((value) => !value)} className="h-10 w-auto gap-1 rounded-xl bg-[#244b3d] px-1.5 text-[11px] text-white shadow-[0_6px_16px_-10px_rgba(23,58,44,.7)] hover:bg-[#1c3c30] max-[360px]:w-full sm:h-9 sm:px-2 sm:text-xs"><Plus size={14} className="size-3.5" aria-hidden="true" />{adding ? "Close note" : "New note"}</Button> : <Button asChild className="h-10 w-auto rounded-xl bg-[#244b3d] px-1.5 text-[11px] text-white hover:bg-[#1c3c30] max-[360px]:w-full sm:h-9 sm:px-2 sm:text-xs"><Link to="/categories"><span className="sm:hidden">New collection</span><span className="hidden sm:inline">Create a collection</span></Link></Button>;
+  const newNoteAction = categoryError ? null : categories.length ? <Button onClick={() => setAdding((value) => !value)} className="h-10 w-auto gap-1 rounded-xl bg-[#244b3d] px-1.5 text-[11px] text-white hover:bg-[#1c3c30] max-[360px]:w-full sm:h-9 sm:px-2 sm:text-xs"><Plus size={14} className="size-3.5" aria-hidden="true" />{adding ? "Close note" : "New note"}</Button> : <Button asChild className="h-10 w-auto rounded-xl bg-[#244b3d] px-1.5 text-[11px] text-white hover:bg-[#1c3c30] max-[360px]:w-full sm:h-9 sm:px-2 sm:text-xs"><Link to="/categories"><span className="sm:hidden">New collection</span><span className="hidden sm:inline">Create a collection</span></Link></Button>;
 
   useEffect(() => {
     setFiltersActive(filtersActive);
@@ -155,7 +155,7 @@ export default function ItemsPage() {
 
       {categoryError && <MessageBanner className="mb-3 mt-0" title="Collections unavailable">{categoryError}<Button type="button" variant="outline" size="sm" onClick={loadCategories} className="ml-2 h-7 rounded-lg">Retry</Button></MessageBanner>}
 
-      <section ref={filterSection} id="notebook-filters" hidden={!filtersOpen} className="rounded-2xl border border-[#e0e4db] bg-[#fffefa] p-3 shadow-[0_10px_34px_-32px_rgba(31,54,40,.5)] sm:p-4" aria-label="Filter notebook">
+      <section ref={filterSection} id="notebook-filters" hidden={!filtersOpen} className="rounded-2xl border border-[#e0e4db] bg-[#fffefa] p-3 sm:p-4" aria-label="Filter notebook">
         <div className="grid gap-3 xl:grid-cols-[minmax(180px,1.5fr)_minmax(150px,.9fr)_minmax(125px,.7fr)_minmax(125px,.7fr)_auto] xl:items-end">
           <label htmlFor="item-search" className="flex min-w-0 flex-col gap-1.5">
             <span className="font-mono text-[9px] uppercase tracking-[.13em] text-[#58675d]">Find something</span>
@@ -202,7 +202,7 @@ export default function ItemsPage() {
 
       {notice && <MessageBanner type={notice.type} className="mt-4" title={notice.type === "error" ? "Something needs attention" : notice.type === "success" ? "All set" : "Import finished"}>{notice.text}<button type="button" onClick={() => setNotice(null)} className="ml-2 underline underline-offset-2">Dismiss</button></MessageBanner>}
 
-      {adding && <section className="my-5 rounded-2xl border border-[#dfe5da] bg-[#fffefa] p-4 shadow-[0_14px_36px_-32px_rgba(29,55,43,.55)] sm:p-6"><ItemForm categories={categories} tags={tags} defaultCategoryId={categoryId} submitLabel="Add to notebook" onSubmit={createItem} onCancel={() => setAdding(false)} /></section>}
+      {adding && <section className="my-5 rounded-2xl border border-[#dfe5da] bg-[#fffefa] p-4 sm:p-6"><ItemForm categories={categories} tags={tags} defaultCategoryId={categoryId} submitLabel="Add to notebook" onSubmit={createItem} onCancel={() => setAdding(false)} /></section>}
 
       {itemsError ? (
         <EmptyState icon={FileUp} eyebrow="A temporary pause" title="Notes could not be loaded." description={itemsError} action="Try again" onAction={reload} />

@@ -158,7 +158,7 @@ export default function SettingsPage() {
                 <RefreshCw size={14} className={busy ? "animate-spin" : ""} />{apiKey ? "Rotate key" : "Generate key"}
               </Button>
               <div className="flex min-w-0 flex-1 gap-2">
-                <Input aria-label="Custom API key GUID" placeholder="Or set a custom GUID" value={custom} disabled={loading || Boolean(keyLoadError)} onChange={(event) => setCustom(event.target.value)} className="h-10 min-w-0 rounded-xl border-white/15 bg-white/[.08] text-xs text-white shadow-none placeholder:text-[#acb9ae] focus-visible:ring-[#d9ed9c]/40" />
+                <Input aria-label="Custom API key GUID" placeholder="Or set a custom GUID" value={custom} disabled={loading || Boolean(keyLoadError)} onChange={(event) => setCustom(event.target.value)} className="h-10 min-w-0 rounded-xl border-white/15 bg-white/[.08] text-xs text-white shadow-none placeholder:text-[#acb9ae]" />
                 <Button type="button" variant="ghost" disabled={!custom.trim() || busy || loading || Boolean(keyLoadError)} onClick={() => run(() => api.put("/settings/api-key", { apiKey: custom.trim() }))} className="h-10 rounded-xl border border-white/30 bg-transparent px-3 text-[10px] text-white hover:bg-white/10 hover:text-white">Set</Button>
               </div>
             </div>
