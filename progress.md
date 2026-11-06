@@ -12,7 +12,7 @@
 * [x] Implement the frontend redesign and regression coverage; fix review findings
 * [x] Run frontend build, E2E, and responsive visual checks
 * [x] Review implementation and resolve consequential findings
-* [ ] Publish and deploy the frontend; smoke-test
+* [ ] Wait for branch CI/image publication; deploy frontend and smoke-test
 
 ## Current phase
 
@@ -22,15 +22,15 @@ Publication and deployment
 
 | Agent | Runs | Steps | Limit | Limit hit | Input | Output | Cache | Cost |
 |---|---|---|---|---|---|---|---|---|
-| build-with-reviewer | 1 | 179 | 100 | YES | 700 | 89459 | 30364254 | $0.0000 |
+| build-with-reviewer | 1 | 214 | 100 | YES | 968 | 105747 | 40733841 | $0.0000 |
 | planer | 1 | 7 | 50 | no | 16 | 3223 | 423346 | $0.0000 |
 | reviewer | 5 | 128 | 100 | no | 415599 | 231128 | 10069120 | $0.2312 |
 
-Total: 314 steps, 323810 output tokens, $0.2312
+Total: 349 steps, 340098 output tokens, $0.2312
 
 ## Notes
 
-Branch `modern_dark` was created from current `master`. Final reviewers returned “No actionable issues found” for the UI and branch workflow. Latest production build passes, all 19 Playwright tests pass, and `git diff --check` is clean. SSH and server Docker Compose access work; remote compose lists backend/frontend. Planner invocation was denied by tool permission; pre-existing untracked `AGENTS.md` and `instruction.md` remain untouched. Local GitHub CLI and Docker are absent. `modern_dark` is not yet present on origin; branch publication, CI, and deployment remain pending.
+Branch `modern_dark` was committed as `c2662c41259b920da680ac01a0f11c200222ba2a` and pushed. Its first CI run failed because the focus-contrast test used programmatic `.focus()` rather than keyboard navigation; changed it to press Tab, matching real `:focus-visible` behavior. Local build and all 19 E2E tests now pass; the updated test/progress changes need a new commit and CI run. Final reviewers returned “No actionable issues found” for the UI and workflow. SSH and server Docker Compose access work; remote compose lists backend/frontend. Pre-existing untracked `AGENTS.md` and `instruction.md` remain untouched. Local GitHub CLI/Docker are absent; deploy waits for a successful GHCR publication.
 
 ## Previous task history
 

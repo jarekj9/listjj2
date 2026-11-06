@@ -534,7 +534,7 @@ test("Modern Dark tokens, dark surfaces, focus visibility and reduced motion are
   await expect(primary).toHaveCSS("background-color", "rgb(242, 242, 242)");
   await expect(primary).toHaveCSS("color", "rgb(10, 10, 10)");
   await expect(primary).toHaveCSS("border-radius", "999px");
-  await primary.focus();
+  await page.keyboard.press("Tab");
   await expect(primary).toBeFocused();
   const focusOutline = await primary.evaluate((node) => ({ style: getComputedStyle(node).outlineStyle, color: getComputedStyle(node).outlineColor }));
   expect(focusOutline.style).toBe("solid");
