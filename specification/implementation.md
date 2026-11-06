@@ -476,7 +476,7 @@ Open question for the user: reduce the desktop top padding for `/items` only (A5
 
 ## Modern Dark frontend redesign (2026-11)
 
-Status: in progress on branch `modern_dark`. The new design replaces the former warm mineral / pine / citrus palette with the user-specified near-black, graphite, quiet grey, bright white and restrained mint system. Apply the design to the existing workspace application, not a marketing page. Preserve routes, copy, content, interactions and the current React/Tailwind/shadcn stack.
+Status: complete and deployed from `master` (`modern_dark`), SHA `e69c4c607f487306b380b531d4c6bb803cbcca6f`. The new design replaces the former warm mineral / pine / citrus palette with the user-specified near-black, graphite, quiet grey, bright white and restrained mint system. Apply the design to the existing workspace application, not a marketing page. Preserve routes, copy, content, interactions and the current React/Tailwind/shadcn stack.
 
 ### Requirements
 
@@ -496,4 +496,4 @@ Status: in progress on branch `modern_dark`. The new design replaces the former 
 
 ### Branch publication and deployment
 
-The Docker workflow also runs for `modern_dark` pushes, in addition to `master`. It always publishes the immutable full-SHA tag, but `latest` remains reserved for `master`. Deploy only the reviewed SHA-tagged frontend on the home server; do not recreate the backend or touch the persistent data volume. The implementation reviewer returned “No actionable issues found.”
+The Docker workflow also runs for `modern_dark` pushes, in addition to `master`. It always publishes the immutable full-SHA tag, but `latest` remains reserved for `master`. Deployed `sha-e69c4c607f487306b380b531d4c6bb803cbcca6f` to the home server. Production `/login`, `/items`, `/api/docs`, and `/api/health` returned HTTP 200; the optional sign-in widget had no horizontal overflow at 320px and 375px. Backend remained healthy and the `listjj2-data` volume was preserved. The implementation reviewer returned “No actionable issues found.”

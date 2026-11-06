@@ -1,9 +1,9 @@
 # Progress
 
 **Start Time:** '06-11-2026 10:00'
-**Finish Time:** Not finished
-**Status:** In progress
-**Progress:** 83%
+**Finish Time:** '06-11-2026 15:05'
+**Status:** Complete
+**Progress:** 100%
 
 ## Tasks
 
@@ -12,25 +12,26 @@
 * [x] Fix the live mobile sign-in widget overflow and add regression coverage
 * [x] Run build, E2E, and responsive checks
 * [x] Review provider-width fallback fix
-* [ ] Merge final auth fix to main, publish and redeploy
+* [x] Wait for main CI and image publication
+* [x] Deploy SHA `e69c4c6` and smoke-test
 
 ## Current phase
 
-Merge and redeploy provider fix
+Complete
 
 ## Step usage
 
 | Agent | Runs | Steps | Limit | Limit hit | Input | Output | Cache | Cost |
 |---|---|---|---|---|---|---|---|---|
-| build-with-reviewer | 1 | 333 | 100 | YES | 1325 | 153668 | 84347470 | $0.0000 |
+| build-with-reviewer | 1 | 381 | 100 | YES | 1469 | 170847 | 105034821 | $0.0000 |
 | planer | 1 | 7 | 50 | no | 16 | 3223 | 423346 | $0.0000 |
 | reviewer | 7 | 155 | 100 | no | 482459 | 254686 | 10984064 | $0.2581 |
 
-Total: 495 steps, 411577 output tokens, $0.2581
+Total: 543 steps, 428756 output tokens, $0.2581
 
 ## Notes
 
-The live `/login` browser check exposed mobile overflow when Google sign-in used a 320px fallback despite a narrower viewport. `AuthFrame` now uses a one-column base grid and LoginPage computes provider width from the container or viewport fallback. Local production build and all 20 E2E tests pass, including 320/375/640px mocked-widget containment. Reviewer returned “No actionable issues found.” The auth fix still needs a new SHA, CI publication and redeployment; live SHA `e76fafc` remains until then. Backend and `listjj2-data` were not touched; `AGENTS.md` and `instruction.md` remain untouched.
+The complete Modern Dark redesign is on `master` and `modern_dark`; deployed frontend SHA `e69c4c607f487306b380b531d4c6bb803cbcca6f` after CI run `42237821616` passed. Final review returned “No actionable issues found.” Production `/login`, `/items`, `/api/docs`, and `/api/health` returned HTTP 200. Production browser checks on `https://listjj.y4r3k.mywire.org/login` measured no overflow: at 320px, document/provider/widget widths were 320/280/280; at 375px they were 360/320/320. Backend remained healthy and unchanged; `listjj2-data` remains. `npm run build`, all 20 E2E tests, and `git diff --check` pass. Planner invocation was denied by tool permission; pre-existing untracked `AGENTS.md` and `instruction.md` remain untouched. Step usage flags `build-with-reviewer` at its 100-step limit; this continuation completed via direct orchestration and dedicated reviewer.
 
 ## Previous task history
 
