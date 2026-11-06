@@ -9,6 +9,7 @@ import { Input } from "../components/ui/input.jsx";
 import { Label } from "../components/ui/label.jsx";
 import { useAuth } from "../auth.jsx";
 import { config } from "../config.js";
+import { getAuthProviderButtonWidth } from "../lib/authLayout.js";
 
 let msalInstance = null;
 async function getMsal() {
@@ -74,7 +75,7 @@ export default function LoginPage() {
           client_id: config.googleClientId,
           callback: (response) => submit({ googleJwt: response.credential }),
         });
-        window.google.accounts.id.renderButton(googleRef.current, { theme: "outline", size: "large", text: "signin_with", shape: "rectangular", width: Math.min(360, googleRef.current.clientWidth || 320) });
+        window.google.accounts.id.renderButton(googleRef.current, { theme: "outline", size: "large", text: "signin_with", shape: "rectangular", width: getAuthProviderButtonWidth(googleRef.current.clientWidth, window.innerWidth) });
       })
       .catch(() => setError("Google sign-in could not be loaded."));
     return () => { mounted = false; };

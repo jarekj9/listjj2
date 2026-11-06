@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
+import { getAuthProviderButtonWidth } from "../src/lib/authLayout.js";
 
 const longName = "Extraordinary collection name ".repeat(8).trim();
 const longValue = "9".repeat(200);
@@ -616,21 +617,23 @@ test("Modern Dark covers each existing route and keeps delayed loading visible",
 });
 
 test("third-party auth widgets remain contained at narrow auth widths", async ({ page }) => {
+  expect([320, 375, 640].map((width) => getAuthProviderButtonWidth(0, width))).toEqual([280, 335, 360]);
   for (const width of [320, 375, 640]) {
     await page.setViewportSize({ width, height: 800 });
     await page.goto("/login");
     const providerContainer = page.getByTestId("auth-providers");
     await expect(providerContainer).toBeAttached();
-    const providerWidth = await providerContainer.evaluate((node) => {
+    const containerWidth = await providerContainer.evaluate((node) => node.clientWidth);
+    const widgetWidth = getAuthProviderButtonWidth(containerWidth, width);
+    await providerContainer.evaluate((node, width) => {
       const widget = document.createElement("div");
       widget.dataset.testid = "google-signin-mock";
-      widget.style.width = `${Math.min(360, node.clientWidth || 320)}px`;
+      widget.style.width = `${width}px`;
       widget.style.height = "40px";
       node.append(widget);
-      return { container: node.clientWidth, widget: widget.getBoundingClientRect().width };
-    });
-    expect(providerWidth.container).toBeLessThanOrEqual(width - 40);
-    expect(providerWidth.widget).toBeLessThanOrEqual(width - 40);
+    }, widgetWidth);
+    expect(containerWidth).toBeLessThanOrEqual(width - 40);
+    expect(widgetWidth).toBeLessThanOrEqual(width - 40);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
   }
 });
