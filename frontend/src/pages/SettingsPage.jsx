@@ -188,7 +188,7 @@ export default function SettingsPage() {
               <h2 className="font-display m-0 mt-2 text-[1.6rem] font-medium text-[#294333]">Ask your notebook.</h2>
             </CardHeader>
             <CardContent className="px-5 pb-5 pt-4 sm:px-6 sm:pb-6">
-              <div className="rounded-xl bg-[#1d382d] p-4 text-[#e8eee5]">
+              <div className="recessed-field rounded-xl bg-[#1d382d] p-4 text-[#e8eee5]">
                 <div className="mb-1 flex justify-end">{copyButton(`curl -H "Authorization: Bearer ${apiKey || "<key>"}" ${origin}/api/external/items`, "curl", true)}</div>
                 <pre className="m-0 overflow-x-auto whitespace-pre-wrap break-all font-mono text-[10px] leading-6">{`curl -H "Authorization: Bearer <key>" ${origin}/api/external/items`}</pre>
               </div>

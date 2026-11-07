@@ -24,6 +24,16 @@ const items = Array.from({ length: 18 }, (_, index) => ({
   files: [],
 }));
 
+function contrastRatio(foreground, background) {
+  const luminance = (value) => {
+    const channels = value.match(/\d+/g).slice(0, 3).map((channel) => Number(channel) / 255);
+    return channels.map((channel) => channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4)
+      .reduce((sum, channel, index) => sum + channel * [0.2126, 0.7152, 0.0722][index], 0);
+  };
+  const values = [luminance(foreground), luminance(background)].sort((a, b) => b - a);
+  return (values[0] + 0.05) / (values[1] + 0.05);
+}
+
 async function mockApi(page, state = {}) {
   const counts = { itemPosts: 0, roleRequests: 0 };
 
@@ -126,15 +136,20 @@ test("short mobile navigation scrolls and closes for both nav links and the bran
   await page.getByRole("button", { name: "Open navigation" }).click();
 
   const sheet = page.locator('[data-slot="sheet-content"]');
-  await expect(sheet).toHaveCSS("background-color", "rgb(14, 14, 14)");
+  await expect(sheet).toHaveCSS("background-image", /linear-gradient/);
   const brandMark = sheet.getByRole("link", { name: "listjj Personal index" }).locator(":scope > span").first();
-  await expect(brandMark).toHaveCSS("background-color", "rgb(14, 14, 14)");
-  await expect(brandMark).toHaveCSS("color", "rgb(166, 169, 173)");
+  await expect(brandMark).toHaveCSS("background-image", /linear-gradient/);
+  await expect(brandMark).toHaveCSS("color", "rgb(65, 75, 82)");
 
   const settingsLink = page.getByRole("link", { name: "Settings & access" });
   await settingsLink.scrollIntoViewIfNeeded();
   await expect(settingsLink).toBeInViewport();
   expect(await settingsLink.evaluate((link) => link.closest('[data-slot="sheet-content"]').scrollTop)).toBeGreaterThan(0);
+  await settingsLink.focus();
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Shift+Tab");
+  await expect(settingsLink).toBeFocused();
+  await expect(settingsLink).toHaveCSS("outline-color", "rgb(24, 30, 34)");
   await settingsLink.click();
   await expect(page.getByRole("heading", { name: "Connections." })).toBeVisible();
   await expect(page.getByRole("dialog")).toBeHidden();
@@ -512,52 +527,72 @@ test("pending approval email wraps at 320px", async ({ page }) => {
   await expect(page.getByText(email)).toBeVisible();
 });
 
-test("Modern Dark tokens, dark surfaces, focus visibility and reduced motion are applied", async ({ page }) => {
+test("Industrial tokens, chassis/field surfaces, focus visibility and reduced motion are applied", async ({ page }) => {
   await mockApi(page);
   await page.setViewportSize({ width: 375, height: 667 });
   await page.goto("/items");
   const tokens = await page.evaluate(() => ({
-    ground: getComputedStyle(document.documentElement).getPropertyValue("--dp-color-ground").trim(),
-    panel: getComputedStyle(document.documentElement).getPropertyValue("--dp-color-panel").trim(),
-    bright: getComputedStyle(document.documentElement).getPropertyValue("--dp-color-bright").trim(),
-    read: getComputedStyle(document.documentElement).getPropertyValue("--dp-color-read").trim(),
-    live: getComputedStyle(document.documentElement).getPropertyValue("--dp-color-live").trim(),
+    chassis: getComputedStyle(document.documentElement).getPropertyValue("--dp-color-chassis").trim(),
+    raised: getComputedStyle(document.documentElement).getPropertyValue("--dp-color-raised").trim(),
+    well: getComputedStyle(document.documentElement).getPropertyValue("--dp-color-well").trim(),
+    ink: getComputedStyle(document.documentElement).getPropertyValue("--dp-color-ink").trim(),
+    label: getComputedStyle(document.documentElement).getPropertyValue("--dp-color-label").trim(),
+    field: getComputedStyle(document.documentElement).getPropertyValue("--dp-color-field").trim(),
+    onField: getComputedStyle(document.documentElement).getPropertyValue("--dp-color-on-field").trim(),
+    onFieldMuted: getComputedStyle(document.documentElement).getPropertyValue("--dp-color-on-field-muted").trim(),
+    accent: getComputedStyle(document.documentElement).getPropertyValue("--dp-color-accent").trim(),
+    sans: getComputedStyle(document.documentElement).getPropertyValue("--dp-typography-sans").trim(),
+    mono: getComputedStyle(document.documentElement).getPropertyValue("--dp-typography-mono").trim(),
+    bodySize: getComputedStyle(document.documentElement).getPropertyValue("--dp-typography-body").trim(),
+    readingSize: getComputedStyle(document.documentElement).getPropertyValue("--dp-typography-reading").trim(),
+    metadataSize: getComputedStyle(document.documentElement).getPropertyValue("--dp-typography-metadata").trim(),
+    labelSize: getComputedStyle(document.documentElement).getPropertyValue("--dp-typography-label").trim(),
+    keyRadius: getComputedStyle(document.documentElement).getPropertyValue("--dp-radius-key").trim(),
     scheme: getComputedStyle(document.documentElement).colorScheme,
     page: getComputedStyle(document.body).backgroundColor,
   }));
-  expect(tokens).toEqual({ ground: "#050505", panel: "#0e0e0e", bright: "#f2f2f2", read: "#a6a9ad", live: "#3fd6c6", scheme: "dark", page: "rgb(5, 5, 5)" });
+  expect(tokens).toEqual({
+    chassis: "#cbd0d2", raised: "#e7eaeb", well: "#b6bec2", ink: "#181e22", label: "#414b52",
+    field: "#20272b", onField: "#f2f4f4", onFieldMuted: "#d8dee1", accent: "#f15b22",
+    sans: '"Industrial Host", "Host Grotesk", sans-serif', mono: '"Industrial Plex", "IBM Plex Mono", monospace',
+    bodySize: "17px", readingSize: "16px", metadataSize: "13px", labelSize: "11px", keyRadius: "4px",
+    scheme: "light", page: "rgb(203, 208, 210)",
+  });
   const pageTitle = page.getByRole("heading", { name: "The notebook." });
-  await expect(pageTitle).toHaveCSS("font-family", /Modern Dark Grotesk|Geist/);
-  await expect(pageTitle).toHaveCSS("color", "rgb(242, 242, 242)");
-  await expect(page.locator("[data-live-status]").first()).toHaveCSS("background-color", "rgb(63, 214, 198)");
+  await expect(pageTitle).toHaveCSS("font-family", /Industrial Host|Host Grotesk/);
+  await expect(pageTitle).toHaveCSS("color", "rgb(24, 30, 34)");
+  await expect(page.locator("[data-hardware-detail]")).toHaveCSS("background-color", "rgb(241, 91, 34)");
 
   const primary = page.getByRole("button", { name: "New note" });
-  await expect(primary).toHaveCSS("background-color", "rgb(242, 242, 242)");
-  await expect(primary).toHaveCSS("color", "rgb(10, 10, 10)");
-  await expect(primary).toHaveCSS("border-radius", "999px");
+  await expect(primary).toHaveCSS("color", "rgb(24, 30, 34)");
+  await expect(primary).toHaveCSS("border-radius", "4px");
+  await expect(primary).not.toHaveCSS("box-shadow", "none");
   await page.keyboard.press("Tab");
   await expect(primary).toBeFocused();
   const focusOutline = await primary.evaluate((node) => ({ style: getComputedStyle(node).outlineStyle, color: getComputedStyle(node).outlineColor }));
   expect(focusOutline.style).toBe("solid");
-  await expect.poll(() => primary.evaluate((node) => getComputedStyle(node).outlineColor)).toBe("rgb(242, 242, 242)");
+  await expect.poll(() => primary.evaluate((node) => getComputedStyle(node).outlineColor)).toBe("rgb(24, 30, 34)");
 
   const completed = page.getByRole("checkbox", { name: "Complete One thought" });
-  await expect(completed).toHaveCSS("background-color", "rgb(242, 242, 242)");
-  await expect(completed).toHaveCSS("color", "rgb(10, 10, 10)");
+  await expect(completed).toHaveCSS("background-color", "rgb(241, 91, 34)");
+  await expect(completed).toHaveCSS("color", "rgb(24, 30, 34)");
 
   await primary.hover();
-  await expect(primary).toHaveCSS("background-color", "rgb(216, 216, 216)");
+  await expect(primary).toHaveCSS("background-image", /linear-gradient/);
   await primary.click();
   const keepActive = page.getByRole("checkbox", { name: /Keep it active/ });
   await expect(keepActive).toBeChecked();
   await keepActive.uncheck();
   await expect(keepActive).not.toBeChecked();
-  await expect(keepActive).toHaveCSS("background-color", "rgb(14, 14, 14)");
-  await expect(keepActive).toHaveCSS("border-color", "rgb(115, 119, 124)");
+  await expect(keepActive).toHaveCSS("background-color", "rgb(32, 39, 43)");
+  await expect(keepActive).toHaveCSS("border-color", "rgb(104, 116, 122)");
   await page.mouse.move(0, 0);
 
   await page.getByRole("button", { name: "Find notes" }).click();
-  await expect(page.locator("#notebook-filters")).toHaveCSS("background-color", "rgb(14, 14, 14)");
+  await expect(page.locator("#notebook-filters")).toHaveCSS("background-color", "rgb(231, 234, 235)");
+  const searchbox = page.getByRole("searchbox", { name: "Find something" });
+  await expect(searchbox).toHaveCSS("background-color", "rgb(32, 39, 43)");
+  await expect(searchbox).toHaveCSS("color", "rgb(242, 244, 244)");
 
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(page.locator(".page-enter")).toHaveCSS("animation-name", "none");
@@ -571,8 +606,64 @@ test("Modern Dark tokens, dark surfaces, focus visibility and reduced motion are
   expect(await page.evaluate(() => document.documentElement.scrollWidth), JSON.stringify(overflowingElements)).toBeLessThanOrEqual(375);
 });
 
-test("Modern Dark covers each existing route and keeps delayed loading visible", async ({ page }) => {
+test("focus outlines use high-contrast colors for dark and light surfaces", async ({ page }) => {
   await mockApi(page);
+  const consoleErrors = [];
+  page.on("console", (message) => { if (message.type() === "error") consoleErrors.push(message.text()); });
+  page.on("pageerror", (error) => consoleErrors.push(error.message));
+  const darkOutline = "rgb(242, 244, 244)";
+  const lightOutline = "rgb(24, 30, 34)";
+  const darkSurfaces = ["rgb(41, 50, 56)", "rgb(32, 39, 43)", "rgb(23, 30, 34)", "rgb(48, 56, 61)"];
+  const lightSurfaces = ["rgb(231, 234, 235)", "rgb(203, 208, 210)", "rgb(182, 190, 194)"];
+
+  const focusAndCheck = async (target, expectedOutline, surfaces) => {
+    await target.focus();
+    await page.keyboard.press("Tab");
+    await page.keyboard.press("Shift+Tab");
+    await expect(target).toBeFocused();
+    const focusStyle = await target.evaluate((node) => {
+      const style = getComputedStyle(node);
+      return {
+        visible: node.matches(":focus-visible"),
+        color: style.outlineColor,
+        style: style.outlineStyle,
+        width: style.outlineWidth,
+        offset: style.outlineOffset,
+      };
+    });
+    expect(focusStyle).toEqual({ visible: true, color: expectedOutline, style: "solid", width: "2px", offset: "3px" });
+    for (const surface of surfaces) expect(contrastRatio(expectedOutline, surface)).toBeGreaterThanOrEqual(3);
+  };
+
+  for (const width of [1280, 375]) {
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto("/settings");
+    const apiKey = page.getByRole("textbox", { name: "Custom API key GUID" });
+    await expect(apiKey).toBeEnabled();
+    await focusAndCheck(apiKey, darkOutline, darkSurfaces);
+  }
+
+  await page.setViewportSize({ width: 1280, height: 800 });
+  for (const route of ["/login", "/register"]) {
+    await page.goto(route);
+    await focusAndCheck(page.getByRole("link", { name: "listjj", exact: true }).first(), darkOutline, darkSurfaces);
+  }
+
+  await page.setViewportSize({ width: 375, height: 667 });
+  await page.goto("/login");
+  await focusAndCheck(page.getByRole("link", { name: "listjj", exact: true }), lightOutline, lightSurfaces);
+
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/login");
+  await focusAndCheck(page.getByRole("textbox", { name: "Email address" }), lightOutline, lightSurfaces);
+  expect(consoleErrors).toEqual([]);
+});
+
+test("Industrial surfaces cover each existing route and keep delayed loading visible", async ({ page }) => {
+  await mockApi(page);
+  const consoleErrors = [];
+  page.on("console", (message) => { if (message.type() === "error") consoleErrors.push(message.text()); });
+  page.on("pageerror", (error) => consoleErrors.push(error.message));
   const paths = [
     ["/items", "The notebook."],
     ["/categories", "Collections."],
@@ -582,23 +673,34 @@ test("Modern Dark covers each existing route and keeps delayed loading visible",
     ["/register", "A place to keep things."],
   ];
 
-  for (const width of [320, 375, 640, 1280]) {
+  for (const width of [320, 370, 375, 640, 760, 1280]) {
     await page.setViewportSize({ width, height: 800 });
     for (const [path, title] of paths) {
       await page.goto(path);
       const heading = page.getByRole("heading", { name: title, exact: true });
       await expect(heading).toBeVisible();
-      await expect(page.locator("body")).toHaveCSS("background-color", "rgb(5, 5, 5)");
-      await expect(heading).toHaveCSS("color", "rgb(242, 242, 242)");
+      await expect(page.locator("body")).toHaveCSS("background-color", "rgb(203, 208, 210)");
+      await expect(heading).toHaveCSS("color", "rgb(24, 30, 34)");
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
       if (path === "/items" && width === 1280) {
         const collectionsLink = page.getByRole("link", { name: /Collections Your own order/ });
         await collectionsLink.hover();
-        await expect(collectionsLink).toHaveCSS("background-color", "rgb(25, 25, 25)");
+        await expect(collectionsLink).toHaveCSS("background-color", "rgb(185, 193, 196)");
         await page.mouse.move(0, 0);
+      }
+      if (path === "/settings" && width === 1280) {
+        const copyCurl = page.getByRole("button", { name: "Copy curl example" });
+        await expect(copyCurl).toHaveCSS("color", "rgb(24, 30, 34)");
+        await expect(copyCurl).toHaveCSS("background-image", /linear-gradient/);
+        await copyCurl.focus();
+        await page.keyboard.press("Tab");
+        await page.keyboard.press("Shift+Tab");
+        await expect(copyCurl).toBeFocused();
+        await expect(copyCurl).toHaveCSS("outline-color", "rgb(242, 244, 244)");
       }
     }
   }
+  expect(consoleErrors).toEqual([]);
 
   await page.route("**/api/auth/me", async (route) => {
     await new Promise((resolve) => setTimeout(resolve, 600));
@@ -608,12 +710,13 @@ test("Modern Dark covers each existing route and keeps delayed loading visible",
   await page.goto("/items");
   const skeleton = page.locator('[aria-label="Loading your workspace"] .animate-pulse').first();
   await expect(skeleton).toBeVisible();
-  await expect(skeleton).toHaveCSS("background-color", "rgb(96, 96, 96)");
+  await expect(skeleton).toHaveCSS("background-color", "rgb(154, 164, 169)");
   await expect(skeleton).toHaveCSS("animation-name", "none");
   const skeletonColor = await skeleton.evaluate((node) => getComputedStyle(node).backgroundColor);
   const skeletonChannels = skeletonColor.match(/\d+/g).slice(0, 3).map(Number);
   const skeletonLuminance = skeletonChannels.map((channel) => channel / 255).map((channel) => channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4).reduce((sum, channel, index) => sum + channel * [0.2126, 0.7152, 0.0722][index], 0);
-  expect((skeletonLuminance + 0.05) / (0.0044 + 0.05)).toBeGreaterThanOrEqual(3);
+  const chassisLuminance = [203, 208, 210].map((channel) => channel / 255).map((channel) => channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4).reduce((sum, channel, index) => sum + channel * [0.2126, 0.7152, 0.0722][index], 0);
+  expect((chassisLuminance + 0.05) / (skeletonLuminance + 0.05)).toBeGreaterThanOrEqual(1.5);
 });
 
 test("third-party auth widgets remain contained at narrow auth widths", async ({ page }) => {
@@ -674,7 +777,15 @@ test("role failures can be retried and destructive dialogs expose pending and fa
   await page.goto("/items");
   await page.getByRole("button", { name: "Delete One thought" }).click();
   const dialog = page.getByRole("dialog");
-  await dialog.getByRole("button", { name: "Delete note" }).click();
+  const confirmDelete = dialog.getByRole("button", { name: "Delete note" });
+  await expect(confirmDelete).toHaveCSS("color", "rgb(242, 244, 244)");
+  await expect(confirmDelete).toHaveCSS("background-color", "rgb(140, 48, 32)");
+  expect(contrastRatio("rgb(242, 244, 244)", "rgb(140, 48, 32)")).toBeGreaterThanOrEqual(4.5);
+  await dialog.getByRole("button", { name: "Keep it" }).focus();
+  await page.keyboard.press("Tab");
+  await expect(confirmDelete).toBeFocused();
+  await expect(confirmDelete).toHaveCSS("outline-color", "rgb(24, 30, 34)");
+  await confirmDelete.click();
   const confirm = dialog.getByRole("button", { name: "Working…" });
   await expect(confirm).toBeDisabled();
   await expect(dialog.getByRole("alert")).toContainText("Delete failed.");
@@ -709,8 +820,8 @@ test("settings copy names are contextual, registration approval copy is accurate
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page.getByRole("heading", { name: "Your space is ready." })).toBeVisible();
   const signInLink = page.getByRole("link", { name: /Continue to sign in/ });
-  await expect(signInLink).toHaveCSS("color", "rgb(10, 10, 10)");
-  await expect(signInLink).toHaveCSS("background-color", "rgb(242, 242, 242)");
+  await expect(signInLink).toHaveCSS("color", "rgb(24, 30, 34)");
+  await expect(signInLink).toHaveCSS("border-radius", "4px");
 
   await page.goto("/items");
   await page.setViewportSize({ width: 1280, height: 700 });

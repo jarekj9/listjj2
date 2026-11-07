@@ -497,3 +497,101 @@ Status: complete and deployed from `master` (`modern_dark`), SHA `e69c4c607f4873
 ### Branch publication and deployment
 
 The Docker workflow also runs for `modern_dark` pushes, in addition to `master`. It always publishes the immutable full-SHA tag, but `latest` remains reserved for `master`. Deployed `sha-e69c4c607f487306b380b531d4c6bb803cbcca6f` to the home server. Production `/login`, `/items`, `/api/docs`, and `/api/health` returned HTTP 200; the optional sign-in widget had no horizontal overflow at 320px and 375px. Backend remained healthy and the `listjj2-data` volume was preserved. The implementation reviewer returned “No actionable issues found.”
+
+## Industrial frontend redesign (2026-11)
+
+Status: in progress. This section supersedes the active Modern Dark visual requirements above, but not its route/behavior, deployment, or test coverage requirements. User requests work on branch `swiss_minimalist`, merge to the repository's mainline, then deploy. Current repository uses `master` as its only remote mainline; verify this before merge.
+
+### Scope and visual requirements
+
+- Restyle the existing workspace application, not a marketing page. Preserve the React 18/Vite/Tailwind v4/local shadcn stack, routes, copy, content, API behavior, CRUD, filters, uploads, CSV, authentication and responsive functionality. No backend/API/data changes, new sections or dependencies.
+- Use exact tokens: chassis `#cbd0d2`, raised `#e7eaeb`, well `#b6bec2`, ink `#181e22`, label `#414b52`, field `#20272b`, on-field `#f2f4f4`, on-field-muted `#d8dee1`, accent `#f15b22`. Bind Host Grotesk to `Industrial Host`, IBM Plex Mono to `Industrial Plex`. Body 17px, reading 16px, metadata 13px, labels 11px.
+- Establish the app shell as a cool-grey instrument housing with subtle top-left-lit raised controls and reversed-shadow recessed wells; use high-contrast dark reading screens and a few orange accents. Use compact engraved-style metadata and restrained seams/vents/bay numbers. Decorative details must not obscure content or imply actual machine telemetry/status.
+- Reuse this language consistently across `/items`, `/categories`, `/users`, `/settings`, `/login`, `/register`, pending approval, loading, empty/error, menus, forms, dialogs and shared primitives. Preserve the existing desktop navigation rail and mobile accessible sheet; no routes or page capabilities removed.
+- Controls remain native/recognizable, keyboard operable and visibly focused outside surface shadows. Read order and screen-reader labels remain intact. Reduced-motion removes movement while preserving surface/color feedback. At 760px stack wide areas and use two-column facts where applicable; at 370px compact the housing and controls. Avoid horizontal overflow from 320px upward.
+
+### Implementation and verification
+
+- Update frontend global tokens/surface styling and shell; retain route/page component behavior. Update `frontend/index.html` font import, `frontend/src/styles.css`, `frontend/src/components/AppShell.jsx` and only page/shared components needed for coherent hardware surfaces.
+- Replace Modern Dark-specific appearance assertions in `frontend/tests/redesign.spec.js` with exact Industrial token, chassis/field contrast, key interaction/focus and reduced-motion checks. Keep all existing behavior, route, accessibility, responsive overflow, and mobile navigation coverage.
+- Update root `specification.md` to describe the active visual system. README stays unchanged unless human setup/deploy steps actually change.
+- Baseline before edits: `frontend/npm run build` passed; `frontend/npm run test:e2e` passed all 20 tests (2026-11-07).
+- After changes: run `npm run build`, full `npm run test:e2e`, `git diff --check`; inspect rendered `/items`, `/categories`, `/users`, `/settings`, `/login`, `/register` at 320/375/640/760/1280px, narrow/landscape heights, and ensure no console errors. Add/update visual regression assertions rather than relaxing behavior checks.
+- Do not include pre-existing untracked root files `AGENTS.md` or `instruction.md`.
+
+### Branch, merge, and deployment
+
+- Branch is `swiss_minimalist`; remote currently exposes `master` and `modern_dark` but no `main`. Use `master` as the repository mainline unless a real `main` appears before merge; do not invent a parallel main branch.
+- Ensure CI tests and publishes the reviewed full-SHA frontend image. Merge the reviewed branch to `master` as a fast-forward/normal merge only after tests and review; deployment uses the merge SHA tag.
+- Deploy only the frontend to `/home/debian/skrypty/docker/listjj2` after image publication. Preserve existing `.env` secrets and SQLite `listjj2-data`; update only `IMAGE_TAG`, then pull/recreate only frontend (port 8093). Verify `/login`, `/items`, `/api/docs`, `/api/health`, relevant responsive layouts and browser console; do not restart backend or alter persistent data.
+
+### Follow-up: dark-surface focus outlines (reviewer blocker)
+
+Status: implemented and reviewed (2026-11-07). Resolves the focus blocker recorded in `progress.md`. Scope: CSS focus colour, Playwright coverage and matching design documentation only. No route, stack, dependency or API change. The production build and all 21 E2E tests pass; reviewer returned `REVIEW PASS.`
+
+**Problem before the fix.** `frontend/src/styles.css` originally set `.auth-dark :focus-visible` and `.key-panel :focus-visible` to ink `#181e22`. The global `outline-offset: 3px` places that outline on the dark panel (`#293238` → `#20272b` → `#171e22`), where ink is about 1.1:1. No test covered the key-panel input or the desktop brand link.
+
+**Rule.** The surface the outline lands on decides its colour, not the element's own fill.
+- Dark scopes `.auth-dark`, `.key-panel`, `.recessed-field`: outline `var(--dp-color-on-field)` (`#f2f4f4`). This covers the custom GUID input and the Copy/Rotate/Set buttons inside `.key-panel`.
+- Light surfaces (chassis, raised, well, `.navigation-dark` which is light despite its name, `.auth-frame` section, `[data-slot="dialog-content"]`): ink `#181e22`.
+- Dark-filled inputs on light surfaces (`.workspace-main [data-slot="input"]`, `.auth-frame [data-slot="input"]`, e.g. login email/password) stay ink. A light outline there would be about 1.1:1.
+
+Contrast reference (WCAG relative luminance, hand-computed; the test must check real values):
+
+| Outline | Surface | Ratio |
+|---|---|---|
+| `#f2f4f4` | `#20272b` field | 13.7 |
+| `#f2f4f4` | `#293238` panel top stop | 11.8 |
+| `#f2f4f4` | `#30383d` input fill | 10.8 |
+| `#181e22` | `#e7eaeb` raised | 13.9 |
+| `#181e22` | `#cbd0d2` chassis | 10.8 |
+| `#181e22` | `#b6bec2` well | 8.9 |
+| `#181e22` (current blocker) | `#20272b` | 1.1, fail |
+| `#f2f4f4` (wrong global change) | `#e7eaeb` | 1.1, fail |
+
+**Implemented changes**
+1. `frontend/src/styles.css` L110-111: set `outline-color: var(--dp-color-on-field) !important` for `.auth-dark :focus-visible` and `.key-panel :focus-visible`. Keep L112 (dialog ink), L113-115 (recessed on-field) and L100-108 (global ink, offset 3px) unchanged.
+2. `frontend/tests/redesign.spec.js`: add one new test after the Industrial tokens test (after L607), reusing `contrastRatio` (L27-35) and `mockApi` (L37). Do not edit existing tests.
+3. Do not touch `AuthFrame.jsx`, `SettingsPage.jsx`, `AppShell.jsx`, `components/ui/input.jsx`, routes, `package.json`, backend or API.
+
+**Playwright test (chromium project)**
+- Focus with `target.focus()`, then `Tab`, then `Shift+Tab` (pattern at L642-645). Assert `toBeFocused()` and `matches(":focus-visible")`.
+- For each target assert `outline-style` solid, `outline-width` 2px, `outline-offset` 3px, the expected `outline-color`, and `contrastRatio(outline, surface) >= 3` for every surface in its group.
+  - Dark group surfaces: `rgb(41, 50, 56)`, `rgb(32, 39, 43)`, `rgb(23, 30, 34)`, `rgb(48, 56, 61)`. Expected outline `rgb(242, 244, 244)`.
+  - Light group surfaces: `rgb(231, 234, 235)`, `rgb(203, 208, 210)`, `rgb(182, 190, 194)`. Expected outline `rgb(24, 30, 34)`.
+- Cases:
+  - a. `/settings`, textbox "Custom API key GUID", at 1280x800 and 375x667 → dark group. Call `toBeEnabled()` first (the input is disabled while the key loads).
+  - b. `/login` and `/register`, link "listjj" inside `.auth-dark`, at 1280x800 → dark group (desktop brand link, `AuthFrame.jsx` L8).
+  - c. `/login`, link "listjj" at 375x667 (mobile brand on light section, `AuthFrame.jsx` L31) → light group (regression).
+  - d. `/login`, textbox "Email address" at 1280x800 (dark-filled on light section) → light group (regression).
+- Existing assertions at L152, L574, L646 and L734 stay as they are and must still pass.
+
+**Edge cases**
+- The 5px outline (2px width + 3px offset) must not be clipped. `.key-panel` padding is 20px and the Card in `SettingsPage.jsx` L139 is `overflow-hidden`. Check at 375px and 1280px.
+- `[data-slot="dialog-content"]` itself (not its descendants) keeps the ink rule. If it ever gets focus, its ink outline sits on the translucent overlay `#181e22a6` (about 2.5:1). `ConfirmDialog.jsx` always renders focusable buttons, so this is not reached. Report only; do not fix here.
+- Security: CSS and tests only. Use the mocked key from `mockApi`; never type, print or commit a real key.
+
+**Lint and quality.** `frontend/package.json` has no lint script; do not add a linter. Run `npm run build`, `npm run test:e2e` and `git diff --check`.
+
+**Documentation**
+- Root `specification.md` §3.1 focus sentence and the frontend testing paragraph: state that dark auth/key panels use light outlines, light surfaces use ink, and contrast is at least 3:1.
+- `progress.md`: mark the focus blocker resolved only after the run passes.
+- `README.md`: unchanged.
+
+**Acceptance criteria**
+1. Dark scopes compute `outline-color` `rgb(242, 244, 244)`; light surfaces compute `rgb(24, 30, 34)`.
+2. Outline style, width and offset are unchanged (solid, 2px, 3px).
+3. Every new contrast assertion is at least 3:1.
+4. Cases a–d pass at the stated sizes with no console errors.
+5. All existing tests pass unchanged; `npm run build`, `npm run test:e2e` and `git diff --check` pass.
+6. Only `frontend/src/styles.css`, `frontend/tests/redesign.spec.js`, root `specification.md` and `progress.md` change.
+7. Screenshot of the focused GUID input (375px and 1280px) and the desktop brand link shows a visible light ring.
+
+**Assumptions**
+
+| # | Topic | Default |
+|---|---|---|
+| A1 | Outline colour follows the surface, not the field. Dark inputs on light surfaces stay ink. | Yes |
+| A2 | Gradients are tested via their stop colours, not pixel sampling. | Yes |
+| A3 | Static CSS reading: the GUID input computes to `rgb(32, 39, 43)`, because `.workspace-main [data-slot="input"]` (L280) beats `.key-panel [data-slot="input"]` (L216) by source order. Its border and ring focus utilities are overridden, so the outline is its only focus cue. | Confirm in the run. If different, assert the real value and report. |
+| A4 | Dialog-content self-focus edge (see Edge cases). | Out of scope, no change |

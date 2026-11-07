@@ -171,7 +171,7 @@ export default function AppShell({ children }) {
           </div>
           <div className="ml-1 flex shrink-0 items-center gap-0.5 sm:ml-3 sm:gap-3">
             <span className="hidden items-center gap-2 rounded-full border border-[#dce3d7] bg-white/70 px-3 py-1.5 text-[10px] text-[#637267] sm:inline-flex">
-              <span data-live-status className="size-1.5 rounded-full" />
+              <span data-hardware-detail aria-hidden="true" className="size-1.5 rounded-full" />
               Private workspace
             </span>
             {notebookRoute && (
@@ -187,7 +187,7 @@ export default function AppShell({ children }) {
                 className="relative size-11 rounded-xl text-[#526258] hover:bg-white"
               >
                 <Search size={18} aria-hidden="true" />
-                {filtersActive && <span data-live-status data-testid="notebook-filter-dot" aria-hidden="true" className="absolute right-1.5 top-1.5 size-1.5 rounded-full" />}
+                {filtersActive && <span data-hardware-indicator data-testid="notebook-filter-dot" aria-hidden="true" className="absolute right-1.5 top-1.5 size-1.5 rounded-full" />}
               </Button>
             )}
             {notebookRoute && filtersActive && <span id="notebook-filter-status" className="sr-only">Filters active</span>}

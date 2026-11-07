@@ -71,18 +71,25 @@ Caches (recent category, tag selection) are replaced by DB columns / direct quer
 
 ## 3.1 Frontend design system
 
-- Visual direction: Modern Dark personal-workspace UI. Use `#050505` ground, `#0e0e0e` graphite panels,
-  `#222222`/`#303030` hairlines, `#f2f2f2` bright statements, `#a6a9ad` reading text, `#8a8d91` metadata,
-  and `#3fd6c6` only for small live/selected indicators. Use Geist-style regular sans for display and
-  reading, Geist Mono for labels/numbers, a shared 1360px content max, 48px desktop gutters, 6px panel
-  corners, pill actions, and 120ms ease-out control transitions.
-- Keep reading areas opaque and legible. Primary actions are bright filled with dark ink; secondary actions
-  are dark outlined. Show offset keyboard focus, honor reduced motion, and avoid colored glows, glass,
-  decorative animation, invented sections, sample metrics, or fabricated product states. Use static white
-  light only where it does not obscure content.
-- Desktop uses a persistent workspace rail; mobile uses an accessible slide-over menu. Keep current page
-  content, copy, layouts and responsive behavior; do not replace this functional application with a
-  marketing page. Content adapts without horizontal overflow.
+- Visual direction: Industrial instrument chassis for the existing personal workspace. Use chassis
+  `#cbd0d2`, raised `#e7eaeb`, recessed well `#b6bec2`, ink `#181e22`, label `#414b52`, dark field
+  `#20272b`, on-field `#f2f4f4`, muted-on-field `#d8dee1`, and orange accent `#f15b22`. Bind Host
+  Grotesk to `Industrial Host` and IBM Plex Mono to `Industrial Plex`; body 17px, reading 16px,
+  metadata 13px and labels 11px. Raised controls use restrained upper-left highlights and lower-edge
+  shadows; recesses reverse the depth. Use compact keys, subtle seams/vents and numbered bays sparingly.
+- Keep recessed reading areas opaque, high contrast and ordinary readable text. Use offset keyboard
+  focus rings with at least 3:1 contrast against the adjacent surface: light chassis/raised/dialog areas
+  use ink, while dark auth, API-key and recessed output panels use the light on-field color. Dark-filled
+  inputs on a light page retain an ink ring because the offset lands on the light surrounding surface.
+  Orange details are accents, not invented telemetry or operational status. Do not add fabricated prices,
+  metrics, controls,
+  sections, glossy chrome, rust, hazard-stripe decoration or motion-heavy effects. Actions remain clearly
+  labeled controls with visible focus outside the hardware edge; hover/press depth changes are short and
+  disabled for movement under reduced motion.
+- Desktop retains the existing workspace navigation rail; mobile retains the accessible slide-over menu.
+  Preserve current page content, copy, route behavior and responsive order; do not replace this functional
+  application with a marketing page. At 760px wide, stack large content groups and keep facts in two
+  columns; at 370px, compact hardware details and controls. Avoid horizontal overflow.
 - Below 640px, the sticky app bar is a compact row with navigation, current page title, a Notebook-only
   Find toggle, and sign out. At every width, the Notebook page presents a compact row with its
   focusable title, three live stats, and New note action; its stats use compact inline 16px values and
@@ -226,7 +233,8 @@ Frontend runtime variables (nginx container): `GOOGLE_CLIENT_ID`, `MICROSOFT_CLI
   filter state reset on route changes, responsive overflow, and create-form actions in the header.
   The Notebook top-row tests assert compact type sizes, button alignment, reduced row/gap heights and
   the 320px wrap order, including three-digit totals and the compact no-collection action. Design checks
-  assert exact Modern Dark tokens, dark color-scheme and page ground, readable display font, visible keyboard
-  focus, reduced-motion behavior, primary/secondary hover states, checked and unchecked checkbox contrast,
-  visible loading skeleton contrast, all six existing routes, delayed loading, optional auth-provider widget
-  containment, and overflow at 320px, 375px, 640px and 1280px.
+  assert exact Industrial tokens, readable raised/recessed surfaces, surface-aware keyboard focus with at
+  least 3:1 contrast on light/dark auth, API-key, navigation and dialog targets, reduced-motion behavior,
+  primary/secondary control states, checked and unchecked checkbox contrast, visible loading
+  skeleton contrast, all six existing routes, delayed loading, optional auth-provider widget containment,
+  and overflow at 320px, 375px, 640px, 760px and 1280px.
