@@ -500,7 +500,7 @@ The Docker workflow also runs for `modern_dark` pushes, in addition to `master`.
 
 ## Industrial frontend redesign (2026-11)
 
-Status: in progress. This section supersedes the active Modern Dark visual requirements above, but not its route/behavior, deployment, or test coverage requirements. User requests work on branch `swiss_minimalist`, merge to the repository's mainline, then deploy. Current repository uses `master` as its only remote mainline; verify this before merge.
+Status: complete and deployed from `master` (`swiss_minimalist`), SHA `e1fd7ec775868f4334c64d32e68a9b558a579e96`. GitHub Actions run `42367352824` passed checks and published both images. Production frontend was updated on the home server; `/login`, `/items`, `/api/docs`, `/api/health` returned HTTP 200, the backend remained healthy, and persistent volume `listjj2-data` was preserved. This section supersedes the active Modern Dark visual requirements above, but not its route/behavior or test coverage history. Repository mainline is `master` (remote has no `main`).
 
 ### Scope and visual requirements
 
