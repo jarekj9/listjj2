@@ -3,7 +3,7 @@
 **Start Time:** 07-11-2026 11:58
 **Finish Time:** Not finished
 **Status:** In progress
-**Progress:** 63%
+**Progress:** 75%
 
 ## Tasks
 * [x] Inspect the remaining focus blocker, current branch/worktree, and existing spec
@@ -11,12 +11,12 @@
 * [x] Fix dark-surface focus indicators and add regression tests/documentation
 * [x] Run production build, all E2E tests, and diff checks
 * [x] Obtain final review under Normal scope
-* [ ] Commit and push `swiss_minimalist`; wait for CI/image publication
-* [ ] Merge into repository mainline (`master`; no `main` exists)
+* [x] Commit and push `swiss_minimalist`
+* [ ] Merge into repository mainline (`master`; no `main` exists) and verify CI/image publication
 * [ ] Deploy published frontend and smoke-test without touching backend/data
 
 ## Current phase
-Publication
+Merge / CI
 
 ## Step usage
 | Agent | Runs | Steps | Limit | Limit hit | Input | Output | Cache | Cost |
@@ -36,3 +36,5 @@ Total: 192 steps, 286540 output tokens, $0.3115
 - Final Normal-scope reviewer returned `REVIEW PASS.` after confirming the blocker fix and spec alignment.
 - Agent `build-with-reviewer` reached its 100-step limit during orchestration; this did not block the fix, tests, review, or publication steps.
 - Original request authorizes branch publication, merge, and deployment; continue those steps. The GitHub remote has no `main`, so repository mainline is `master`.
+- Commit `9f0e62c` is pushed to `origin/swiss_minimalist`. This feature branch does not trigger Actions (workflow only runs on `master`/`modern_dark`); the merge push to `master` will run tests and image publication.
+- `gh` CLI is unavailable in this environment. Do not deploy until master workflow/image publication is independently verified; deployment host contains compose and `.env`, with backend/frontend services running.
